@@ -11,8 +11,6 @@ import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.util.math.BlockPos;
 
 public class MapBoundaries extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -28,8 +26,8 @@ public class MapBoundaries extends Module {
         .defaultValue(new SettingColor(255, 0, 0, 64))
         .build()
     );
-    private final Setting<Boolean> oclussion = sgGeneral.add(new BoolSetting.Builder()
-        .name("Oclussion")
+    private final Setting<Boolean> occlusion = sgGeneral.add(new BoolSetting.Builder()
+        .name("Occlusion")
         .description("Hide the faces that are covered by blocks")
         .defaultValue(true)
         .build()
@@ -38,8 +36,6 @@ public class MapBoundaries extends Module {
     public MapBoundaries() {
         super(Addon.CATEGORY, "Map Boundaries", "Overlays the current map boundaries");
     }
-
-    private final Mesh mesh = new ShaderMesh(Shaders.POS_COLOR, DrawMode.Triangles, Mesh.Attrib.Vec3, Mesh.Attrib.Color);
 
     @EventHandler
     private void onRender(Render3DEvent event) {
@@ -51,11 +47,9 @@ public class MapBoundaries extends Module {
         int posZ2 = posZ1 + 128;
         int bottomY = mc.world.getBottomY();
         int topY = mc.world.getTopY();
-        // mesh.depthTest = true;
-        // mesh.color(color2);
-        // mesh.begin();
-        // mesh.quad(posX1, bottomY, posX2, topY);
-        // mesh.end();
-        // mesh.render(event.matrices);
+        event.renderer.triangles.depthTest = occlusion.get();
+        event.renderer.lines.depthTest = occlusion.get();
+        event.renderer.box(posX1+ 0.0075,bottomY,posZ1 + 0.0075,posX2 - 0.0075,topY,posZ2 - 0.0075,color2,color1,ShapeMode.Both,6);
+        // Z fighting sucks ass.
     }
 }
