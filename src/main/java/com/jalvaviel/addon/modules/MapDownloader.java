@@ -63,12 +63,41 @@ public class MapDownloader extends Module {
     private final Setting<Boolean> debug = sgGeneral.add(new BoolSetting.Builder()
         .name("Debug")
         .description("Debug")
-        .defaultValue(true)
+        .defaultValue(false)
         .build()
     );
 
     public MapDownloader() {
         super(Addon.CATEGORY, "Map Downloader", "Download maps nearby.");
+    }
+
+    private void setSaveMapsFromInventory(String folderPath){
+        assert mc.player != null;
+        List<ItemStack> mapsInInventory = getMapsInInventory(mc.player.getInventory());
+        for(ItemStack map : mapsInInventory){
+            try {
+                byte[] pixelData = getPixelDataFromMap(map);
+                BufferedImage img = convertMap(pixelData);
+                String filename = generateImageIdentifier(pixelData).toString();
+                writeImageToFolder(img,folderPath+'\\'+filename+".png");
+            } catch (NullPointerException e) {
+                if (debug.get()) {ChatUtils.sendMsg(Text.of("An exception has occurred, stopping."));}
+            }
+        }
+    }
+
+    private void setSaveMapsFromEntity(String folderPath){
+        List<ItemStack> mapsInItemFrames = getMapsInItemFrames(mapRadius.get());
+        for(ItemStack map : mapsInItemFrames){
+            try {
+                byte[] pixelData = getPixelDataFromMap(map);
+                BufferedImage img = convertMap(pixelData);
+                String filename = generateImageIdentifier(pixelData).toString();
+                writeImageToFolder(img,folderPath+'\\'+filename+".png");
+            } catch (NullPointerException e) {
+                if (debug.get()) {ChatUtils.sendMsg(Text.of("An exception has occurred, stopping."));}
+            }
+        }
     }
 
     @Override
@@ -77,35 +106,17 @@ public class MapDownloader extends Module {
         String folderPath = getFolderPath(isServer);
         createWorldFolder(folderPath);
         if(saveMapsFromInventory.get()){
-            List<ItemStack> mapsInInventory = getMapsInInventory(mc.player.getInventory());
-            for(ItemStack map : mapsInInventory){
-                try {
-                    byte[] pixelData = getPixelDataFromMap(map);
-                    BufferedImage img = convertMap(pixelData);
-                    String filename = generateImageIdentifier(pixelData).toString();
-                    writeImageToFolder(img,folderPath+'\\'+filename+".png");
-                } catch (NullPointerException e) {
-                    if (debug.get()) {ChatUtils.sendMsg(Text.of("An exception has occurred, stopping."));}
-                }
-            }
+            setSaveMapsFromInventory(folderPath);
         }
         if(saveMapsFromEntity.get()){
-            List<ItemStack> mapsInItemFrames = getMapsInItemFrames(mapRadius.get());
-            for(ItemStack map : mapsInItemFrames){
-                try {
-                    byte[] pixelData = getPixelDataFromMap(map);
-                    BufferedImage img = convertMap(pixelData);
-                    String filename = generateImageIdentifier(pixelData).toString();
-                    writeImageToFolder(img,folderPath+'\\'+filename+".png");
-                } catch (NullPointerException e) {
-                    if (debug.get()) {ChatUtils.sendMsg(Text.of("An exception has occurred, stopping."));}
-                }
-            }
+            setSaveMapsFromEntity(folderPath);
         }
     }
 
     private @NotNull List<ItemStack> getMapsInItemFrames(int boxSize){
+        assert mc.player != null;
         Box box = new Box(mc.player.getX()+boxSize,mc.player.getY()+boxSize,mc.player.getZ()+boxSize,mc.player.getX()-boxSize,mc.player.getY()-boxSize,mc.player.getZ()-boxSize);
+        assert mc.world != null;
         List<ItemFrameEntity> itemFrameEntities = mc.world.getEntitiesByType(TypeFilter.instanceOf(ItemFrameEntity.class),box, EntityPredicates.VALID_ENTITY);
         List<ItemStack> mapsInItemFrames = new ArrayList<>();
         if(debug.get()){ChatUtils.sendMsg(Text.of("Found "+itemFrameEntities.size()+" item frames."));}
@@ -117,10 +128,10 @@ public class MapDownloader extends Module {
 
     private @NotNull String getFolderPath(boolean isServer){
         if(isServer) {
-            return FabricLoader.getInstance().getGameDir() + "\\" + folderString.get() + "\\" + mc.getCurrentServerEntry().name;
+            return FabricLoader.getInstance().getGameDir() + "\\" + folderString.get() + "\\" + Objects.requireNonNull(mc.getCurrentServerEntry()).name;
         }
         else{
-            return FabricLoader.getInstance().getGameDir() + "\\" + folderString.get() + "\\" + mc.getServer().getSaveProperties().getLevelName();
+            return FabricLoader.getInstance().getGameDir() + "\\" + folderString.get() + "\\" + Objects.requireNonNull(mc.getServer()).getSaveProperties().getLevelName();
         }
     }
 
@@ -159,12 +170,12 @@ public class MapDownloader extends Module {
     }
 
     private @NotNull BufferedImage convertMap(byte[] pixelData) {
-        BufferedImage img = new BufferedImage(128, 128, BufferedImage.TYPE_INT_RGB);
+        BufferedImage img = new BufferedImage(128, 128, BufferedImage.TYPE_INT_BGR);
 
         for (int i = 0; i < 16384; i++) {
             byte byteColor = pixelData[i];
             int intColor = MapColor.getRenderColor(byteColor);
-            img.setRGB(i % 128, i / 128, bgrToRgb(intColor)); //for some ducking reason, it's in bgr and not rgb
+            img.setRGB(i % 128, i / 128, intColor); //for some ducking reason, it's in bgr and not rgb
         }
         return img;
     }
