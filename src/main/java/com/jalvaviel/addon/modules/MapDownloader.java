@@ -71,7 +71,8 @@ public class MapDownloader extends Module {
         super(Addon.CATEGORY, "Map Downloader", "Download maps nearby.");
     }
 
-    private void setSaveMapsFromInventory(String folderPath){
+    private int setSaveMapsFromInventory(String folderPath){
+        int totalMaps = 0;
         assert mc.player != null;
         List<ItemStack> mapsInInventory = getMapsInInventory(mc.player.getInventory());
         for(ItemStack map : mapsInInventory){
@@ -80,13 +81,16 @@ public class MapDownloader extends Module {
                 BufferedImage img = convertMap(pixelData);
                 String filename = generateImageIdentifier(pixelData).toString();
                 writeImageToFolder(img,folderPath+'\\'+filename+".png");
+                totalMaps++;
             } catch (NullPointerException e) {
                 if (debug.get()) {ChatUtils.sendMsg(Text.of("An exception has occurred, stopping."));}
             }
         }
+        return totalMaps;
     }
 
-    private void setSaveMapsFromEntity(String folderPath){
+    private int setSaveMapsFromEntity(String folderPath){
+        int totalMaps = 0;
         List<ItemStack> mapsInItemFrames = getMapsInItemFrames(mapRadius.get());
         for(ItemStack map : mapsInItemFrames){
             try {
@@ -94,10 +98,12 @@ public class MapDownloader extends Module {
                 BufferedImage img = convertMap(pixelData);
                 String filename = generateImageIdentifier(pixelData).toString();
                 writeImageToFolder(img,folderPath+'\\'+filename+".png");
+                totalMaps++;
             } catch (NullPointerException e) {
                 if (debug.get()) {ChatUtils.sendMsg(Text.of("An exception has occurred, stopping."));}
             }
         }
+        return totalMaps;
     }
 
     @Override
@@ -106,11 +112,14 @@ public class MapDownloader extends Module {
         String folderPath = getFolderPath(isServer);
         createWorldFolder(folderPath);
         if(saveMapsFromInventory.get()){
-            setSaveMapsFromInventory(folderPath);
+            int totalMaps = setSaveMapsFromInventory(folderPath);
+            ChatUtils.sendMsg(Text.of("Saved " + totalMaps + " maps from your inventory."));
         }
         if(saveMapsFromEntity.get()){
-            setSaveMapsFromEntity(folderPath);
+            int totalMaps = setSaveMapsFromEntity(folderPath);
+            ChatUtils.sendMsg(Text.of("Saved " + totalMaps + " maps from nearby item frames."));
         }
+        toggle();
     }
 
     private @NotNull List<ItemStack> getMapsInItemFrames(int boxSize){
@@ -170,12 +179,12 @@ public class MapDownloader extends Module {
     }
 
     private @NotNull BufferedImage convertMap(byte[] pixelData) {
-        BufferedImage img = new BufferedImage(128, 128, BufferedImage.TYPE_INT_BGR);
+        BufferedImage img = new BufferedImage(128, 128, BufferedImage.TYPE_INT_RGB);
 
         for (int i = 0; i < 16384; i++) {
             byte byteColor = pixelData[i];
             int intColor = MapColor.getRenderColor(byteColor);
-            img.setRGB(i % 128, i / 128, intColor); //for some ducking reason, it's in bgr and not rgb
+            img.setRGB(i % 128, i / 128, bgrToRgb(intColor)); //for some ducking reason, it's in bgr and not rgb
         }
         return img;
     }
