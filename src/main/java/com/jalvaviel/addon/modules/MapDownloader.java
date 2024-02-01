@@ -24,6 +24,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 import java.util.List;
 
@@ -282,6 +283,20 @@ public class MapDownloader extends Module {
                 int intColor = MapColor.getRenderColor(byteColor);
                 img.setRGB(i, j, bgrToRgb(intColor)); //for some ducking reason, it's in bgr and not rgb img.setRGB(i % 128, i / 128, bgrToRgb(intColor)
             }
+        }
+        if(mapBackground.get() & !stitchMapsFromInventory.get() & !stitchMapsFromItemFrames.get()){
+            try {
+                InputStream inputStream = MapDownloader.class.getResourceAsStream("/com/jalvaviel/addon/textures/map_background_atlas.png");
+                BufferedImage mapAtlas = ImageIO.read(inputStream);
+                BufferedImage slicedMapImage = mapAtlas.getSubimage(0, 0, 142, 142);
+                Graphics2D g2d = slicedMapImage.createGraphics();
+                g2d.drawImage(img, 7, 7, null);
+                g2d.dispose();
+                return slicedMapImage;
+            } catch (IOException e) {
+                if (debug.get()) {ChatUtils.sendMsg(Text.of("Couldn't retrieve the pixel data from the map atlas."));}
+            }
+
         }
         return img;
     }
