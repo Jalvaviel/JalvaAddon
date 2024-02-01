@@ -18,6 +18,7 @@ public class Addon extends MeteorAddon {
         // Modules
         Modules.get().add(new MapDownloader());
         Modules.get().add(new MapBoundaries());
+        //Modules.get().add(new MapStorage());
         Modules.get().add(new MushroomWater());
 
         // Commands

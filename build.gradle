@@ -27,6 +27,9 @@ dependencies {
 
     // Meteor
     modImplementation "meteordevelopment:meteor-client:${project.meteor_version}"
+
+    // Barnietone
+    // modCompileOnly "meteordevelopment:baritone:1.20.2"
 }
 
 processResources {

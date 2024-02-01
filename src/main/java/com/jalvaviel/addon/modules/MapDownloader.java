@@ -18,13 +18,14 @@ import net.minecraft.util.math.Box;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
 import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-
 import java.util.*;
+import java.util.List;
 
 public class MapDownloader extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -60,6 +61,28 @@ public class MapDownloader extends Module {
         .build()
     );
 
+    private final Setting<Boolean> stitchMapsFromInventory = sgGeneral.add(new BoolSetting.Builder()
+        .name("Stitch maps from inventory")
+        .description("Stitches maps in the player's inventory.")
+        .defaultValue(false)
+        .build()
+    );
+
+    private final Setting<Boolean> stitchMapsFromItemFrames = sgGeneral.add(new BoolSetting.Builder()
+        .name("Stitch maps from entity")
+        .description("Stitches maps in item frames.")
+        .defaultValue(false)
+        .build()
+    );
+
+    private final Setting<Boolean> mapBackground = sgGeneral.add(new BoolSetting.Builder()
+        .name("Map background")
+        .description("Saves the images with a map texture background.") // Requested by Badinek
+        .defaultValue(false)
+        .build()
+    );
+
+
     private final Setting<Boolean> debug = sgGeneral.add(new BoolSetting.Builder()
         .name("Debug")
         .description("Debug")
@@ -71,6 +94,72 @@ public class MapDownloader extends Module {
         super(Addon.CATEGORY, "Map Downloader", "Download maps nearby.");
     }
 
+
+    private void setStitchMapsFromInventory(String folderPath){
+        assert mc.player != null;
+        List<ItemStack> mapsInInventory = getMapsInInventory(mc.player.getInventory());
+        List<BufferedImage> bufferedImages = new ArrayList<>();
+        BufferedImage blankImage = generateBlankImage();
+        for(ItemStack map : mapsInInventory) {
+            try {
+                byte[] pixelData = getPixelDataFromMap(map);
+                BufferedImage img = convertMap(pixelData);
+                bufferedImages.add(img);
+            } catch (NullPointerException e) {
+                bufferedImages.add(blankImage);
+            }
+        }
+        BufferedImage canvas = stitchMaps(bufferedImages, 1152, 512);
+        writeImageToFolder(canvas, folderPath+'\\'+"canvas"+".png");
+    }
+
+    private void setStitchMapsFromItemFrames(String folderPath){
+        assert mc.player != null;
+        List<ItemStack> mapsInItemFrames= getMapsInItemFrames(mapRadius.get());
+        List<BufferedImage> bufferedImages = new ArrayList<>();
+        BufferedImage blankImage = generateBlankImage();
+        for(ItemStack map : mapsInItemFrames) {
+            try {
+                byte[] pixelData = getPixelDataFromMap(map);
+                BufferedImage img = convertMap(pixelData);
+                bufferedImages.add(img);
+            } catch (NullPointerException e) {
+                bufferedImages.add(blankImage);
+            }
+        }
+        BufferedImage canvas = stitchMaps(bufferedImages, mapRadius.get()*128, mapRadius.get()*128);
+        writeImageToFolder(canvas, folderPath+'\\'+"canvas2"+".png");
+    }
+
+    private BufferedImage generateBlankImage(){
+        BufferedImage blankImage = new BufferedImage(128, 128, BufferedImage.TYPE_INT_RGB);
+        for (int i = 0; i < 128; i++){
+            for (int j = 0; j < 128; j++){
+                int rgbValue = mapBackground.get() ? 0xD6BE96 : 0; // Black or map texture background
+                blankImage.setRGB(i, j, rgbValue);
+            }
+        }
+        return blankImage;
+    }
+
+    private BufferedImage stitchMaps(List<BufferedImage> bufferedImages, int width, int height){
+        BufferedImage combinedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g2d = combinedImage.createGraphics();
+        g2d.setColor(Color.BLACK);
+        g2d.fillRect(0, 0, width, height);
+        int x = 0;
+        int y = 0;
+        for (BufferedImage image : bufferedImages) {
+            g2d.drawImage(image, x, y, null);
+            x += image.getWidth();
+            if (x >= width) {
+                x = 0;
+                y += image.getHeight();
+            }
+        }
+        g2d.dispose();
+        return combinedImage;
+    }
     private int setSaveMapsFromInventory(String folderPath){
         int totalMaps = 0;
         assert mc.player != null;
@@ -119,10 +208,14 @@ public class MapDownloader extends Module {
             int totalMaps = setSaveMapsFromEntity(folderPath);
             ChatUtils.sendMsg(Text.of("Saved " + totalMaps + " maps from nearby item frames."));
         }
+        if(stitchMapsFromInventory.get()){
+            setStitchMapsFromInventory(folderPath);
+            ChatUtils.sendMsg(Text.of("Done stitching."));
+        }
         toggle();
     }
 
-    private @NotNull List<ItemStack> getMapsInItemFrames(int boxSize){
+    public @NotNull List<ItemStack> getMapsInItemFrames(int boxSize){
         assert mc.player != null;
         Box box = new Box(mc.player.getX()+boxSize,mc.player.getY()+boxSize,mc.player.getZ()+boxSize,mc.player.getX()-boxSize,mc.player.getY()-boxSize,mc.player.getZ()-boxSize);
         assert mc.world != null;
@@ -160,6 +253,8 @@ public class MapDownloader extends Module {
         for (ItemStack itemStack : playerInventory.main) {
             if (itemStack.getItem() instanceof FilledMapItem) {
                 mapsInInventory.add(itemStack);
+            }else{
+                mapsInInventory.add(null);
             }
         }
         return mapsInInventory;
@@ -181,10 +276,12 @@ public class MapDownloader extends Module {
     private @NotNull BufferedImage convertMap(byte[] pixelData) {
         BufferedImage img = new BufferedImage(128, 128, BufferedImage.TYPE_INT_RGB);
 
-        for (int i = 0; i < 16384; i++) {
-            byte byteColor = pixelData[i];
-            int intColor = MapColor.getRenderColor(byteColor);
-            img.setRGB(i % 128, i / 128, bgrToRgb(intColor)); //for some ducking reason, it's in bgr and not rgb
+        for (int i = 0; i < 128; i++) { // 16384 Rows
+            for (int j = 0; j < 128; j++) { // Columns
+                byte byteColor = pixelData[i + j * 128];
+                int intColor = MapColor.getRenderColor(byteColor);
+                img.setRGB(i, j, bgrToRgb(intColor)); //for some ducking reason, it's in bgr and not rgb img.setRGB(i % 128, i / 128, bgrToRgb(intColor)
+            }
         }
         return img;
     }
@@ -199,6 +296,17 @@ public class MapDownloader extends Module {
     @Contract("_ -> new")
     private @NotNull UUID generateImageIdentifier(byte[] pixelData){
         return UUID.nameUUIDFromBytes(pixelData);
+    }
+
+    private UUID generateCanvasIdentifier(BufferedImage bufferedImage){
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        try {
+            ImageIO.write(bufferedImage, "png", byteArrayOutputStream);
+        } catch (IOException e) {
+            if (debug.get()) {ChatUtils.sendMsg(Text.of("Couldn't create an UUID for the canvas."));}
+            return UUID.fromString("Failsafe");
+        }
+        return UUID.nameUUIDFromBytes(byteArrayOutputStream.toByteArray());
     }
 
     private void writeImageToFolder(BufferedImage img, String fullPath){
