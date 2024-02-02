@@ -12,6 +12,8 @@ import net.minecraft.item.FilledMapItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.map.MapState;
 import net.minecraft.predicate.entity.EntityPredicates;
+import net.minecraft.resource.ResourceFinder;
+import net.minecraft.resource.ResourceManager;
 import net.minecraft.text.Text;
 import net.minecraft.util.TypeFilter;
 import net.minecraft.util.math.Box;
@@ -25,6 +27,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.util.*;
 import java.util.List;
 
@@ -286,8 +289,12 @@ public class MapDownloader extends Module {
         }
         if(mapBackground.get() & !stitchMapsFromInventory.get() & !stitchMapsFromItemFrames.get()){
             try {
-                InputStream inputStream = MapDownloader.class.getResourceAsStream("/com/jalvaviel/addon/textures/map_background_atlas.png");
-                BufferedImage mapAtlas = ImageIO.read(inputStream);
+                //String filePath = String.valueOf(FabricLoader.getInstance().getModContainer("jalva-addon").get().findPath("map_background_atlas.png"));
+                //String mapPath = "resources/assets/jalvaaddon/textures/map_background_atlas.png";
+                String mapPath = FabricLoader.getInstance().getModContainer("jalva-addon").get().findPath("map_background_atlas.png").toString();
+                if (debug.get()) {ChatUtils.sendMsg(Text.of("PATH:  "+mapPath));}
+                File imageFile = new File(mapPath);
+                BufferedImage mapAtlas = ImageIO.read(imageFile);
                 BufferedImage slicedMapImage = mapAtlas.getSubimage(0, 0, 142, 142);
                 Graphics2D g2d = slicedMapImage.createGraphics();
                 g2d.drawImage(img, 7, 7, null);
