@@ -289,13 +289,15 @@ public class MapDownloader extends Module {
         }
         if(mapBackground.get() & !stitchMapsFromInventory.get() & !stitchMapsFromItemFrames.get()){
             try {
-                //String filePath = String.valueOf(FabricLoader.getInstance().getModContainer("jalva-addon").get().findPath("map_background_atlas.png"));
+                //String mapPath = String.valueOf(FabricLoader.getInstance().getModContainer("jalva-addon").get().getOrigin().getPaths());
                 //String mapPath = "resources/assets/jalvaaddon/textures/map_background_atlas.png";
-                String mapPath = FabricLoader.getInstance().getModContainer("jalva-addon").get().findPath("map_background_atlas.png").toString();
-                if (debug.get()) {ChatUtils.sendMsg(Text.of("PATH:  "+mapPath));}
+                //String mapPath = FabricLoader.getInstance().getAllMods().toString();
+                //if (debug.get()) {ChatUtils.sendMsg(Text.of("PATH:  "+mapPath));}
+                //File imageFile = new File(mapPath+"/resources/assets/jalvaaddon/textures/map_atlas.png");
+                String mapPath = FabricLoader.getInstance().getGameDir() + "\\" + folderString.get() + "\\map_atlas.png"; // Workaround TODO
                 File imageFile = new File(mapPath);
                 BufferedImage mapAtlas = ImageIO.read(imageFile);
-                BufferedImage slicedMapImage = mapAtlas.getSubimage(0, 0, 142, 142);
+                BufferedImage slicedMapImage = mapAtlas.getSubimage(142, 142, 142, 142);
                 Graphics2D g2d = slicedMapImage.createGraphics();
                 g2d.drawImage(img, 7, 7, null);
                 g2d.dispose();
