@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 
 public class Addon extends MeteorAddon {
     public static final Logger LOG = LogUtils.getLogger();
+    public static final String MOD_ID = "jalva-addon";
     public static final Category CATEGORY = new Category("Jalva Addons");
     public static final HudGroup HUD_GROUP = new HudGroup("Jalva Addons");
 

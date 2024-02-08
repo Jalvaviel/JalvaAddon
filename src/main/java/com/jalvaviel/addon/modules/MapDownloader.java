@@ -12,9 +12,9 @@ import net.minecraft.item.FilledMapItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.map.MapState;
 import net.minecraft.predicate.entity.EntityPredicates;
-import net.minecraft.resource.ResourceFinder;
-import net.minecraft.resource.ResourceManager;
+import net.minecraft.resource.Resource;
 import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.TypeFilter;
 import net.minecraft.util.math.Box;
 import org.jetbrains.annotations.Contract;
@@ -23,13 +23,13 @@ import org.jetbrains.annotations.Nullable;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
+import java.io.*;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.List;
+
+import static com.jalvaviel.addon.Addon.LOG;
+import static com.jalvaviel.addon.Addon.MOD_ID;
 
 public class MapDownloader extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -107,7 +107,7 @@ public class MapDownloader extends Module {
         for(ItemStack map : mapsInInventory) {
             try {
                 byte[] pixelData = getPixelDataFromMap(map);
-                BufferedImage img = convertMap(pixelData);
+                BufferedImage img = convertMap(pixelData, 128, 128);
                 bufferedImages.add(img);
             } catch (NullPointerException e) {
                 bufferedImages.add(blankImage);
@@ -125,7 +125,7 @@ public class MapDownloader extends Module {
         for(ItemStack map : mapsInItemFrames) {
             try {
                 byte[] pixelData = getPixelDataFromMap(map);
-                BufferedImage img = convertMap(pixelData);
+                BufferedImage img = convertMap(pixelData,128,128);
                 bufferedImages.add(img);
             } catch (NullPointerException e) {
                 bufferedImages.add(blankImage);
@@ -145,6 +145,21 @@ public class MapDownloader extends Module {
         }
         return blankImage;
     }
+
+    private BufferedImage getMapAtlas(){
+        String location = "jalvaaddon:textures/map_background.png";
+        try {
+            Identifier identifier = Identifier.tryParse(location);
+            Optional<Resource> resource = mc.getResourceManager().getResource(identifier);
+            byte [] is = resource.get().getInputStream().readAllBytes();
+            ByteArrayInputStream bis = new ByteArrayInputStream(is);
+            return ImageIO.read(bis);
+        } catch (Exception e) {
+            ChatUtils.sendMsg(Text.of("Couldn't convert map atlas!!!!"));
+        }
+        return null;
+    }
+
 
     private BufferedImage stitchMaps(List<BufferedImage> bufferedImages, int width, int height){
         BufferedImage combinedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
@@ -171,8 +186,12 @@ public class MapDownloader extends Module {
         for(ItemStack map : mapsInInventory){
             try {
                 byte[] pixelData = getPixelDataFromMap(map);
-                BufferedImage img = convertMap(pixelData);
+                BufferedImage img = convertMap(pixelData,128,128);
                 String filename = generateImageIdentifier(pixelData).toString();
+                if (mapBackground.get()){
+                    img = setMapBackground(img);
+                    //writeImageToFolder(bufferedMapBackground, folderPath+'\\'+"putamierda.png");
+                }
                 writeImageToFolder(img,folderPath+'\\'+filename+".png");
                 totalMaps++;
             } catch (NullPointerException e) {
@@ -182,13 +201,23 @@ public class MapDownloader extends Module {
         return totalMaps;
     }
 
+    public BufferedImage setMapBackground(BufferedImage image){
+        BufferedImage bufferedMapBackground = getMapAtlas();
+        BufferedImage resultImage = new BufferedImage(142, 142, BufferedImage.TYPE_INT_RGB);
+        Graphics2D graphics = resultImage.createGraphics();
+        graphics.drawImage(bufferedMapBackground, 0, 0, null);
+        graphics.drawImage(image, 7, 7, null);
+        graphics.dispose();
+        return resultImage;
+    }
+
     private int setSaveMapsFromEntity(String folderPath){
         int totalMaps = 0;
         List<ItemStack> mapsInItemFrames = getMapsInItemFrames(mapRadius.get());
         for(ItemStack map : mapsInItemFrames){
             try {
                 byte[] pixelData = getPixelDataFromMap(map);
-                BufferedImage img = convertMap(pixelData);
+                BufferedImage img = convertMap(pixelData,128,128);
                 String filename = generateImageIdentifier(pixelData).toString();
                 writeImageToFolder(img,folderPath+'\\'+filename+".png");
                 totalMaps++;
@@ -277,35 +306,15 @@ public class MapDownloader extends Module {
         }
     }
 
-    private @NotNull BufferedImage convertMap(byte[] pixelData) {
-        BufferedImage img = new BufferedImage(128, 128, BufferedImage.TYPE_INT_RGB);
+    private @NotNull BufferedImage convertMap(byte[] pixelData, int width, int height) {
+        BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 
-        for (int i = 0; i < 128; i++) { // 16384 Rows
-            for (int j = 0; j < 128; j++) { // Columns
-                byte byteColor = pixelData[i + j * 128];
+        for (int i = 0; i < width; i++) { // 16384 Rows
+            for (int j = 0; j < height; j++) { // Columns
+                byte byteColor = pixelData[i + j * height];
                 int intColor = MapColor.getRenderColor(byteColor);
                 img.setRGB(i, j, bgrToRgb(intColor)); //for some ducking reason, it's in bgr and not rgb img.setRGB(i % 128, i / 128, bgrToRgb(intColor)
             }
-        }
-        if(mapBackground.get() & !stitchMapsFromInventory.get() & !stitchMapsFromItemFrames.get()){
-            try {
-                //String mapPath = String.valueOf(FabricLoader.getInstance().getModContainer("jalva-addon").get().getOrigin().getPaths());
-                //String mapPath = "resources/assets/jalvaaddon/textures/map_background_atlas.png";
-                //String mapPath = FabricLoader.getInstance().getAllMods().toString();
-                //if (debug.get()) {ChatUtils.sendMsg(Text.of("PATH:  "+mapPath));}
-                //File imageFile = new File(mapPath+"/resources/assets/jalvaaddon/textures/map_atlas.png");
-                String mapPath = FabricLoader.getInstance().getGameDir() + "\\" + folderString.get() + "\\map_atlas.png"; // Workaround TODO
-                File imageFile = new File(mapPath);
-                BufferedImage mapAtlas = ImageIO.read(imageFile);
-                BufferedImage slicedMapImage = mapAtlas.getSubimage(142, 142, 142, 142);
-                Graphics2D g2d = slicedMapImage.createGraphics();
-                g2d.drawImage(img, 7, 7, null);
-                g2d.dispose();
-                return slicedMapImage;
-            } catch (IOException e) {
-                if (debug.get()) {ChatUtils.sendMsg(Text.of("Couldn't retrieve the pixel data from the map atlas."));}
-            }
-
         }
         return img;
     }
