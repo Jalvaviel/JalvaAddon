@@ -10,12 +10,14 @@ import java.util.UUID;
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class Map {
-    ItemStack mapStack;
-    byte [] pixelData = null;
-    BufferedImage bufferedMap;
-    int width;
-    int height;
-    UUID imageID = null;
+    private ItemStack mapStack;
+    private byte [] pixelData = null;
+    protected BufferedImage bufferedMap;
+    protected int width;
+    protected int height;
+    private UUID imageID = null;
+
+
 
     public Map(ItemStack mapStack, int width, int height) { // Constructor for arbitrary width and height
         this.mapStack = mapStack;
@@ -53,7 +55,7 @@ public class Map {
         }
     }
 
-    private void generateBlankImage(){
+    protected void generateBlankImage(){
         BufferedImage blankMap = new BufferedImage(this.width, this.height, BufferedImage.TYPE_INT_ARGB);
         for (int i = 0; i < this.width; i++){ // Rows
             for (int j = 0; j < this.height; j++){ // Columns
