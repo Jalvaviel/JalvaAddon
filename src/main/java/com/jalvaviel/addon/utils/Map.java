@@ -12,10 +12,10 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
 public class Map {
     private ItemStack mapStack;
     private byte [] pixelData = null;
-    protected BufferedImage bufferedMap;
+    public BufferedImage bufferedMap;
     protected int width;
     protected int height;
-    private UUID imageID = null;
+    public UUID imageID = null;
 
 
 
@@ -32,13 +32,13 @@ public class Map {
     }
 
     public void generateMap(){
-        getPixelDataFromMap(this.mapStack);
+        getPixelDataFromMap();
         convertMap();
         generateImageIdentifier();
     }
 
-    private void getPixelDataFromMap(ItemStack itemStack) {
-        MapState mapState = FilledMapItem.getMapState(itemStack, mc.world); // Get the pixels of the map in its MapState.
+    private void getPixelDataFromMap() {
+        MapState mapState = FilledMapItem.getMapState(this.mapStack, mc.world); // Get the pixels of the map in its MapState.
         if (mapState == null || mapState.colors == null || mapState.colors.length != 128 * 128) { // Ensure it's not empty and has the correct dimensions.
             generateBlankImage();
         }
@@ -51,7 +51,7 @@ public class Map {
                 byte byteColor = this.pixelData[j * this.width + i]; // this.pixelData[i + j * this.height]
                 int intColor = MapColor.getRenderColor(byteColor);
                 this.bufferedMap.setRGB(i, j, bgrToArgb(intColor)); // Trust me, I've tried by using a BufferedImage.TYPE_INT_BGR, but this is a workaround.
-            }
+            } // Problem here TODO ( Overload in FramedMap, and add an offset of 14 there when drawing the image
         }
     }
 
