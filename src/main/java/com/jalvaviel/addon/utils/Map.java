@@ -51,7 +51,7 @@ public class Map {
                 byte byteColor = this.pixelData[j * this.width + i]; // this.pixelData[i + j * this.height]
                 int intColor = MapColor.getRenderColor(byteColor);
                 this.bufferedMap.setRGB(i, j, bgrToArgb(intColor)); // Trust me, I've tried by using a BufferedImage.TYPE_INT_BGR, but this is a workaround.
-            } // Problem here TODO ( Overload in FramedMap, and add an offset of 14 there when drawing the image
+            }
         }
     }
 
