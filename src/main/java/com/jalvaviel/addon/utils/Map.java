@@ -10,7 +10,7 @@ import java.util.UUID;
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class Map {
-    private ItemStack mapStack;
+    private ItemStack mapStack = null;
     private byte [] pixelData = null;
     public BufferedImage bufferedMap;
     protected int width;
@@ -30,6 +30,12 @@ public class Map {
     public Map(ItemStack mapStack) {
         this(mapStack,128,128);
     }
+    public Map(boolean isEmptyMap) {
+        this.width = 128;
+        this.height = 128;
+        generateBlankImage();
+        this.imageID = UUID.fromString("00000000-0000-0000-0000-000000000000");
+    }
 
     public void generateMap(){
         getPixelDataFromMap();
@@ -41,8 +47,9 @@ public class Map {
         MapState mapState = FilledMapItem.getMapState(this.mapStack, mc.world); // Get the pixels of the map in its MapState.
         if (mapState == null || mapState.colors == null || mapState.colors.length != 128 * 128) { // Ensure it's not empty and has the correct dimensions.
             generateBlankImage();
+        } else {
+            this.pixelData = mapState.colors;
         }
-        this.pixelData = mapState.colors;
     }
 
     private void convertMap() {
@@ -50,8 +57,8 @@ public class Map {
             for (int j = 0; j < this.height; j++) { // Columns
                 byte byteColor = this.pixelData[j * this.width + i]; // this.pixelData[i + j * this.height]
                 int intColor = MapColor.getRenderColor(byteColor);
-                this.bufferedMap.setRGB(i, j, bgrToArgb(intColor)); // Trust me, I've tried by using a BufferedImage.TYPE_INT_BGR, but this is a workaround.
-            }
+                this.bufferedMap.setRGB(i, j, bgrToArgb(intColor));
+            } // Trust me, I've tried by using a BufferedImage.TYPE_INT_BGR, but this is a workaround.
         }
     }
 

@@ -3,6 +3,7 @@ package com.jalvaviel.addon.modules;
 import com.jalvaviel.addon.Addon;
 import com.jalvaviel.addon.utils.FramedMap;
 import com.jalvaviel.addon.utils.Map;
+import com.jalvaviel.addon.utils.Canvas;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
@@ -52,6 +53,13 @@ public class MapDownloader extends Module {
         .build()
     );
 
+    private final Setting<Boolean> saveMapsAsCanvas = sgGeneral.add(new BoolSetting.Builder()
+        .name("Save maps in a canvas.")
+        .description("Saves multiple maps in the same image.")
+        .defaultValue(false)
+        .build()
+    );
+
     private final Setting<Boolean> mapBackground = sgGeneral.add(new BoolSetting.Builder()
         .name("Map background")
         .description("Saves the images with a map texture background.") // Requested by Badinek
@@ -81,6 +89,10 @@ public class MapDownloader extends Module {
 
     private void saveMapsFromInventory(String folderPath){
         ArrayList<Map> mapsInInventory = getMapsFromInventory();
+        if(saveMapsAsCanvas.get()){
+            Canvas canvas = new Canvas(mapsInInventory, Canvas.CanvasType.PLAYER_INVENTORY);
+            writeCanvasToFolder(canvas, folderPath + "\\" + canvas.canvasID + ".png");
+        }
         for(Map map : mapsInInventory){
             writeMapToFolder(map,folderPath + "\\" + map.imageID + ".png");
         }
@@ -90,14 +102,17 @@ public class MapDownloader extends Module {
         PlayerInventory playerInventory = mc.player.getInventory();
         ArrayList<Map> mapsInInventory = new ArrayList<>();
         for (ItemStack itemStack : playerInventory.main) {
-            if (itemStack.getItem() instanceof FilledMapItem) {
-                if (mapBackground.get()){
+            if(itemStack.getItem() instanceof FilledMapItem) {
+                if (mapBackground.get()) {
                     FramedMap map = new FramedMap(itemStack);
                     mapsInInventory.add(map);
                 } else {
                     Map map = new Map(itemStack);
                     mapsInInventory.add(map);
                 }
+            } else {
+                Map map = new Map(true);
+                mapsInInventory.add(map);
             }
         }
         return mapsInInventory;
@@ -131,6 +146,15 @@ public class MapDownloader extends Module {
             ImageIO.write(map.bufferedMap, "png", output);
         } catch (IOException e) {
             LOG.warn("Couldn't store the map "+ map.imageID.toString());
+        }
+    }
+
+    private void writeCanvasToFolder(Canvas canvas, String fullPath){
+        try {
+            File output = new File(fullPath);
+            ImageIO.write(canvas.bufferedCanvas, "png", output);
+        } catch (IOException e) {
+            LOG.warn("Couldn't store the map "+ canvas.canvasID.toString());
         }
     }
 }

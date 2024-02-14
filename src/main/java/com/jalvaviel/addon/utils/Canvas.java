@@ -8,14 +8,15 @@ import java.util.UUID;
 public class Canvas {
     int width = 0;
     int height = 0;
-    ArrayList<Map> mapMatrix = new ArrayList<>();
-    UUID canvasID = null;
-    BufferedImage bufferedCanvas = null;
+    public ArrayList<Map> mapMatrix = new ArrayList<>();
+    public UUID canvasID = null;
+    public BufferedImage bufferedCanvas = null;
 
     public Canvas(ArrayList<Map> mapMatrix, CanvasType canvasType){
         this.mapMatrix = mapMatrix;
         generateCanvas(canvasType);
         drawCanvas();
+        generateCanvasIdentifier();
     }
 
     private void generateCanvas(CanvasType canvasType){
@@ -64,6 +65,10 @@ public class Canvas {
         }
         graphics.dispose();
         this.bufferedCanvas = resultImage;
+    }
+
+    private void generateCanvasIdentifier(){
+        this.canvasID = UUID.randomUUID();
     }
 
     public enum CanvasType{
