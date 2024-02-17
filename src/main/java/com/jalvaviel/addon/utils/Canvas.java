@@ -1,9 +1,14 @@
 package com.jalvaviel.addon.utils;
 
+import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.UUID;
+
+import static com.jalvaviel.addon.Addon.LOG;
 
 public class Canvas {
     int width = 0;
@@ -68,7 +73,13 @@ public class Canvas {
     }
 
     private void generateCanvasIdentifier(){
-        this.canvasID = UUID.randomUUID();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try {
+            ImageIO.write(bufferedCanvas, "png", baos);
+        } catch (IOException e) {
+            LOG.warn("Couldn't store the canvas UUID");
+        }
+        this.canvasID = UUID.nameUUIDFromBytes(baos.toByteArray());
     }
 
     public enum CanvasType{

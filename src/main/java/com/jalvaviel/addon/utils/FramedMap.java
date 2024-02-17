@@ -29,7 +29,7 @@ public class FramedMap extends Map {
     }
 
     private void getMapBG(){
-        String location = "jalvaaddon:textures/map_background.png";
+        String location = "jalvaaddon:textures/single_bg.png";
         try {
             Identifier identifier = Identifier.tryParse(location);
             Optional<Resource> resource = mc.getResourceManager().getResource(identifier);

@@ -1,5 +1,7 @@
 package com.jalvaviel.addon;
 import com.jalvaviel.addon.modules.*;
+import com.jalvaviel.addon.utils.Canvas;
+import com.jalvaviel.addon.utils.FramedCanvasGenerator;
 import com.mojang.logging.LogUtils;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
 import meteordevelopment.meteorclient.systems.hud.HudGroup;
@@ -16,6 +18,7 @@ public class Addon extends MeteorAddon {
 
     @Override
     public void onInitialize() {
+        FramedCanvasGenerator framedCanvasGenerator = new FramedCanvasGenerator(Canvas.CanvasType.PLAYER_INVENTORY);
         // Modules
         Modules.get().add(new MapDownloader());
         Modules.get().add(new MapBoundaries());

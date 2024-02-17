@@ -1,6 +1,7 @@
 package com.jalvaviel.addon.modules;
 
 import com.jalvaviel.addon.Addon;
+import com.jalvaviel.addon.utils.FramedCanvas;
 import com.jalvaviel.addon.utils.FramedMap;
 import com.jalvaviel.addon.utils.Map;
 import com.jalvaviel.addon.utils.Canvas;
@@ -90,20 +91,41 @@ public class MapDownloader extends Module {
     private void saveMapsFromInventory(String folderPath){
         ArrayList<Map> mapsInInventory = getMapsFromInventory();
         if(saveMapsAsCanvas.get()){
-            Canvas canvas = new Canvas(mapsInInventory, Canvas.CanvasType.PLAYER_INVENTORY);
-            writeCanvasToFolder(canvas, folderPath + "\\" + canvas.canvasID + ".png");
-        }
-        for(Map map : mapsInInventory){
-            writeMapToFolder(map,folderPath + "\\" + map.imageID + ".png");
+            if(mapBackground.get()){
+                FramedCanvas canvas = new FramedCanvas(mapsInInventory, Canvas.CanvasType.PLAYER_INVENTORY);
+                writeCanvasToFolder(canvas, folderPath + "\\" + canvas.canvasID + ".png");
+            } else {
+                Canvas canvas = new Canvas(mapsInInventory, Canvas.CanvasType.PLAYER_INVENTORY);
+                writeCanvasToFolder(canvas, folderPath + "\\" + canvas.canvasID + ".png");
+            }
+        } else {
+            for (Map map : mapsInInventory) {
+                writeMapToFolder(map, folderPath + "\\" + map.imageID + ".png");
+            }
         }
     }
 
     private ArrayList<Map> getMapsFromInventory(){
         PlayerInventory playerInventory = mc.player.getInventory();
         ArrayList<Map> mapsInInventory = new ArrayList<>();
-        for (ItemStack itemStack : playerInventory.main) {
+        for (ItemStack itemStack : playerInventory.main.subList(9, 36)) {
             if(itemStack.getItem() instanceof FilledMapItem) {
-                if (mapBackground.get()) {
+                if (mapBackground.get() && !saveMapsAsCanvas.get()) {
+                    FramedMap map = new FramedMap(itemStack);
+                    mapsInInventory.add(map);
+                } else {
+                    Map map = new Map(itemStack);
+                    mapsInInventory.add(map);
+                }
+            } else {
+                Map map = new Map(true);
+                mapsInInventory.add(map);
+            }
+        }
+        // This is done to flip the first 9 slots of the inventory from the top part to the bottom in case there's a canvas.
+        for (ItemStack itemStack : playerInventory.main.subList(0, 9)) {
+            if(itemStack.getItem() instanceof FilledMapItem) {
+                if (mapBackground.get() && !saveMapsAsCanvas.get()) {
                     FramedMap map = new FramedMap(itemStack);
                     mapsInInventory.add(map);
                 } else {
@@ -143,7 +165,9 @@ public class MapDownloader extends Module {
     private void writeMapToFolder(Map map, String fullPath){
         try {
             File output = new File(fullPath);
-            ImageIO.write(map.bufferedMap, "png", output);
+            if(map.imageID.toString() != "00000000-0000-0000-0000-000000000000"){ // TODO clean this mess
+                ImageIO.write(map.bufferedMap, "png", output);
+            }
         } catch (IOException e) {
             LOG.warn("Couldn't store the map "+ map.imageID.toString());
         }
