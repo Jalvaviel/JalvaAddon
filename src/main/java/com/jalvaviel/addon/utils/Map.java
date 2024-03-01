@@ -34,7 +34,7 @@ public class Map {
         this.width = 128;
         this.height = 128;
         generateBlankImage();
-        this.imageID = UUID.fromString("00000000-0000-0000-0000-000000000000");
+        this.imageID = UUID.fromString("DEADBEEF-0000-0000-0000-000000000000");
     }
 
     public void generateMap(){
