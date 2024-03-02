@@ -26,6 +26,7 @@ import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Vec3i;
 import org.jetbrains.annotations.NotNull;
 import javax.imageio.ImageIO;
 import java.io.*;
@@ -33,6 +34,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.jalvaviel.addon.Addon.LOG;
+import static java.lang.Math.abs;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_KP_ADD;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_KP_SUBTRACT;
 
@@ -88,7 +90,7 @@ public class MapDownloader extends Module {
     public int yaw;
     public String folderString = "maps";
     public String axis;
-
+    CanvasGenerator canvasGenerator;
     public MapDownloader() {
         super(Addon.CATEGORY, "Map Downloader", "Download maps nearby.");
     }
@@ -119,7 +121,14 @@ public class MapDownloader extends Module {
 
 
     private void saveMaps(String folderPath){
-        ArrayList<Map> maps = null;
+        Map[][] maps = null;
+        if(mapDownloaderMode.get() == MapDownloaderModes.Item_Frames){
+            maps = getMapsFromItemFrames();
+            CanvasData canvasData = canvasGenerator.generateCanvasFromMapMatrix(maps,CanvasType.CUSTOM);
+            writeCanvasToFolder(canvasData,folderPath + "\\" + canvasData.canvasID + ".png");
+        }
+
+        /*
         if(mapDownloaderMode.get() == MapDownloaderModes.Item_Frames){
             maps = getMapsFromItemFrames();
             if (saveMapsAsCanvas.get()) {
@@ -141,6 +150,7 @@ public class MapDownloader extends Module {
             //maps = getMapsFromInventory();
 
         }
+         */
         /*
         if (saveMapsAsCanvas.get()) {
             if (mapBackground.get()) {
@@ -159,23 +169,24 @@ public class MapDownloader extends Module {
          */
     }
 
-    private ArrayList<Map> getMapsFromItemFrames() { // TODO take into account if the player wants single maps or a canvas
+    private Map[][] getMapsFromItemFrames() { // TODO take into account if the player wants single maps or a canvas
         box = new Box(pos1.getX()+1.1,pos1.getY()+1.1,pos1.getZ()+1.1, pos2.getX()-0.1,pos2.getY()-0.1,pos2.getZ()-0.1); // Shitass offsets
-        ArrayList<Map> mapsInItemFrames = new ArrayList<>();
-        ChatUtils.sendMsg(Text.of("Dimensions of the box X:"+box.getLengthX()+" Y:"+box.getLengthY()+" Z:"+box.getLengthZ()));
-        ChatUtils.sendMsg(Text.of("Coords of the box X1:"+box.minX+" Y1:"+box.minY+" Z1:"+box.minZ+" X2:"+box.maxX+" Y2:"+box.maxY+" Z2:"+box.maxZ));
         axis = box.getLengthX() >= box.getLengthZ() ? "X" : "Z"; // TODO naïve approach
         List<ItemFrameEntity> itemFrameEntities = mc.world.getEntitiesByType(TypeFilter.instanceOf(ItemFrameEntity.class),box, EntityPredicates.VALID_ENTITY);
-        ChatUtils.sendMsg(Text.of("Found "+itemFrameEntities.size()+" item frames."));
-        ChatUtils.sendMsg(Text.of("--------------------------------------------"));
+        int canvasHorizontalLength = (int) (axis == "X" ? box.getLengthX() : box.getLengthZ());
+        Map[][] canvasMatrix = new Map[canvasHorizontalLength][(int) box.getLengthY()];
+
         for(ItemFrameEntity itemFrameEntity : itemFrameEntities){
-            int mapWidthOffset = (int) (axis == "X" ? itemFrameEntity.getBlockX() : itemFrameEntity.getBlockZ()) % (int) (axis == "X" ? box.getLengthX() : box.getLengthZ()) ; // TODO calculate the real offset from the itemframe coords
-            int mapHeightOffset = itemFrameEntity.getBlockY() % (int) box.getLengthY();
-            ChatUtils.sendMsg(Text.of("Canvas size X:"+mapWidthOffset+" Y:"+mapHeightOffset));
-            Map map = new Map(itemFrameEntity.getHeldItemStack(), mapWidthOffset, mapHeightOffset);
-            mapsInItemFrames.add(map);
+            int itemFrameHorizontalCoordsWorld = axis == "X" ? itemFrameEntity.getBlockX() : itemFrameEntity.getBlockZ();
+            int itemFrameVerticalCoordsWorld = itemFrameEntity.getBlockY();
+            int boxHorizontalCorner = (int) (axis == "X" ? box.minX : box.minZ);
+            int boxVerticalCorner = (int) box.maxY;
+
+            int indexArrayHorizontal = abs(itemFrameHorizontalCoordsWorld - boxHorizontalCorner);
+            int indexArrayVertical = abs(itemFrameVerticalCoordsWorld - boxVerticalCorner);
+            canvasMatrix[indexArrayHorizontal][indexArrayVertical]= new Map(itemFrameEntity.getHeldItemStack());
         }
-        return mapsInItemFrames;
+        return canvasMatrix;
     }
 
     private void getMapsFromInventory() {
@@ -212,47 +223,6 @@ public class MapDownloader extends Module {
         }
     }
 
-
-    /**
-     * Folder and .png creation
-     **/
-
-    private @NotNull String getFolderPath(boolean isServer){
-        if(isServer) {
-            return FabricLoader.getInstance().getGameDir() + "\\" + folderString + "\\" + Objects.requireNonNull(mc.getCurrentServerEntry()).name;
-        }else{
-            return FabricLoader.getInstance().getGameDir() + "\\" + folderString + "\\" + Objects.requireNonNull(mc.getServer()).getSaveProperties().getLevelName();
-        }
-    }
-
-    private void createWorldFolder(String folderPath) {
-        File mapImagesFolder = new File(folderPath);
-        if (!mapImagesFolder.exists()) {
-            if(!mapImagesFolder.mkdirs()) {
-                LOG.warn("Couldn't create the map folder, maybe it does exist already?");
-            };
-        }
-    }
-
-    private void writeMapToFolder(Map map, String fullPath){
-        try {
-            File output = new File(fullPath);
-            if(map.imageID.toString() != "DEADBEEF-0000-0000-0000-000000000000"){ // TODO clean this mess
-                ImageIO.write(map.bufferedMap, "png", output);
-            }
-        } catch (IOException e) {
-            LOG.warn("Couldn't store the map "+ map.imageID.toString());
-        }
-    }
-
-    private void writeCanvasToFolder(Canvas canvas, String fullPath){
-        try {
-            File output = new File(fullPath);
-            ImageIO.write(canvas.bufferedCanvas, "png", output);
-        } catch (IOException e) {
-            LOG.warn("Couldn't store the map "+ canvas.canvasID.toString());
-        }
-    }
 
     /**
      * Wand selection

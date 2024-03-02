@@ -16,7 +16,7 @@ import java.util.Optional;
 import static meteordevelopment.meteorclient.MeteorClient.LOG;
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
-public class FramedCanvasGenerator {
+public class ProceduralFrameGenerator {
     private BufferedImage canvasAtlas;
     private int width = 0;
     private int height = 0;
@@ -46,7 +46,7 @@ public class FramedCanvasGenerator {
         }
     }
 
-    public FramedCanvasGenerator(Canvas.CanvasType canvasType) {
+    public ProceduralFrameGenerator(CanvasType canvasType) {
         getCanvasAtlas();
         getSubImages();
         generateBackgroundCanvas(9, 4, "player_inventory_bg");
@@ -56,7 +56,7 @@ public class FramedCanvasGenerator {
         generateBackgroundCanvas(1, 1, "single_bg");
     }
 
-    public FramedCanvasGenerator(int tileWidth, int tileHeight) {
+    public ProceduralFrameGenerator(int tileWidth, int tileHeight) {
         getCanvasAtlas();
         getSubImages();
         generateBackgroundCanvas(tileWidth, tileHeight, "custom_bg");

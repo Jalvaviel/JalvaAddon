@@ -5,28 +5,47 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.UUID;
 
 import static com.jalvaviel.addon.Addon.LOG;
+public class CanvasGenerator{
+    int pixelDimensions = 128;
 
-public class Canvas {
-    public int tileWidth = 0;
-    public int tileHeight = 0;
-    public int pixelWidth = 0;
-    public int pixelHeight = 0;
-    public ArrayList<Map> mapMatrix = new ArrayList<>();
-    public UUID canvasID = null;
-    public BufferedImage bufferedCanvas = null;
+    public CanvasData generateCanvasFromMapMatrix(Map[][] mapMatrix, CanvasType canvasType) {
+        int tileWidth = mapMatrix.length;
+        int tileHeight = mapMatrix[0].length;
+        BufferedImage bufferedCanvas = new BufferedImage(tileWidth, tileHeight, BufferedImage.TYPE_INT_ARGB);
 
-    public Canvas(ArrayList<Map> mapMatrix, int tileWidth, int tileHeight){
+        Graphics2D graphics = bufferedCanvas.createGraphics();
+
+        for (int i = 0; i < tileHeight; i++) {
+            for (int j = 0; j < tileWidth; j++) {
+                Map currentMap = mapMatrix[j][i];
+                if (currentMap != null) {
+                    graphics.drawImage(currentMap.bufferedMap, j * pixelDimensions, i * pixelDimensions, null);
+                }
+            }
+        }
+        graphics.dispose();
+
+        UUID uuid = Utils.generateBufferedImageIdentifier(bufferedCanvas);
+
+        return new CanvasData(bufferedCanvas, uuid, canvasType, tileWidth, tileHeight);
+    }
+}
+
+
+/*
+    public Canvas(Map[][] mapMatrix){
         this.mapMatrix = mapMatrix;
+        this.tileWidth = mapMatrix.length;
+        this.tileHeight = mapMatrix[0].length;
         generateCanvas(CanvasType.CUSTOM);
         drawCanvas();
         generateCanvasIdentifier();
     }
 
-    public Canvas(ArrayList<Map> mapMatrix, CanvasType canvasType){
+    public Canvas(Map[][] mapMatrix, CanvasType canvasType){
         this.mapMatrix = mapMatrix;
         generateCanvas(canvasType);
         drawCanvas();
@@ -68,7 +87,6 @@ public class Canvas {
         BufferedImage resultImage = new BufferedImage(this.pixelWidth, this.pixelHeight, BufferedImage.TYPE_INT_ARGB);
         Graphics2D graphics = resultImage.createGraphics();
         int mapIndex = 0;
-        /*
         for (int y = 0; y < this.pixelHeight; y += 128) { // TODO don't do it two dimensional, one dimensional with map coords (offset)
             for (int x = 0; x < this.pixelWidth; x += 128) {
                 if (mapIndex < mapMatrix.size()) {
@@ -79,28 +97,15 @@ public class Canvas {
                 }
             }
         }
-         */
+
 
         graphics.dispose();
         this.bufferedCanvas = resultImage;
     }
 
-    private void generateCanvasIdentifier(){
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        try {
-            ImageIO.write(bufferedCanvas, "png", baos);
-        } catch (IOException e) {
-            LOG.warn("Couldn't store the canvas UUID");
-        }
-        this.canvasID = UUID.nameUUIDFromBytes(baos.toByteArray());
-    }
 
-    public enum CanvasType{
-        CUSTOM,
-        PLAYER_INVENTORY,
-        CHEST,
-        DOUBLE_CHEST,
-        DISPENSER,
-        SINGLE
-    }
+
+
 }
+
+ */
