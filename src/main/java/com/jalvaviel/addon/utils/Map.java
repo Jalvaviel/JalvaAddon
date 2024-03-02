@@ -16,19 +16,24 @@ public class Map {
     protected int width;
     protected int height;
     public UUID imageID = null;
+    protected int canvasX;
+    protected int canvasY;
 
-
-
-    public Map(ItemStack mapStack, int width, int height) { // Constructor for arbitrary width and height
+    public Map(ItemStack mapStack, int width, int height, int canvasX, int canvasY) { // Constructor for arbitrary width and height
         this.mapStack = mapStack;
         this.width = width;
         this.height = height;
+        this.canvasX = canvasX;
+        this.canvasY = canvasY;
         this.bufferedMap = new BufferedImage(this.width, this.height, BufferedImage.TYPE_INT_ARGB);
         generateMap();
     }
 
     public Map(ItemStack mapStack) {
-        this(mapStack,128,128);
+        this(mapStack,128,128,0,0);
+    }
+    public Map(ItemStack mapStack, int canvasX, int canvasY) {
+        this(mapStack,128,128,canvasX,canvasY);
     }
     public Map(boolean isEmptyMap) {
         this.width = 128;

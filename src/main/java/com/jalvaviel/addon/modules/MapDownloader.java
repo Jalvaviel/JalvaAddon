@@ -87,6 +87,7 @@ public class MapDownloader extends Module {
     public Box box;
     public int yaw;
     public String folderString = "maps";
+    public String axis;
 
     public MapDownloader() {
         super(Addon.CATEGORY, "Map Downloader", "Download maps nearby.");
@@ -120,11 +121,27 @@ public class MapDownloader extends Module {
     private void saveMaps(String folderPath){
         ArrayList<Map> maps = null;
         if(mapDownloaderMode.get() == MapDownloaderModes.Item_Frames){
-            // TODO maps = getMapsFromItemFrames();
+            maps = getMapsFromItemFrames();
+            if (saveMapsAsCanvas.get()) {
+                int width = (int) (axis=="X" ? box.getLengthX() : box.getLengthZ());
+                if (mapBackground.get()) {
+                    FramedCanvas canvas = new FramedCanvas(maps, width, (int) box.getLengthY());
+                    writeCanvasToFolder(canvas, folderPath + "\\" + canvas.canvasID + ".png");
+                } else {
+                    Canvas canvas = new Canvas(maps, width, (int) box.getLengthY());
+                    writeCanvasToFolder(canvas, folderPath + "\\" + canvas.canvasID + ".png");
+                }
+            } else {
+                for (Map map : maps) {
+                    writeMapToFolder(map, folderPath + "\\" + map.imageID + ".png");
+                }
+            }
         }
         if (mapDownloaderMode.get() == MapDownloaderModes.Player_Inventory) {
-            maps = getMapsFromInventory();
+            //maps = getMapsFromInventory();
+
         }
+        /*
         if (saveMapsAsCanvas.get()) {
             if (mapBackground.get()) {
                 FramedCanvas canvas = new FramedCanvas(maps, Canvas.CanvasType.PLAYER_INVENTORY);
@@ -138,10 +155,30 @@ public class MapDownloader extends Module {
                 writeMapToFolder(map, folderPath + "\\" + map.imageID + ".png");
             }
         }
+
+         */
     }
 
+    private ArrayList<Map> getMapsFromItemFrames() { // TODO take into account if the player wants single maps or a canvas
+        box = new Box(pos1.getX()+1.1,pos1.getY()+1.1,pos1.getZ()+1.1, pos2.getX()-0.1,pos2.getY()-0.1,pos2.getZ()-0.1); // Shitass offsets
+        ArrayList<Map> mapsInItemFrames = new ArrayList<>();
+        ChatUtils.sendMsg(Text.of("Dimensions of the box X:"+box.getLengthX()+" Y:"+box.getLengthY()+" Z:"+box.getLengthZ()));
+        ChatUtils.sendMsg(Text.of("Coords of the box X1:"+box.minX+" Y1:"+box.minY+" Z1:"+box.minZ+" X2:"+box.maxX+" Y2:"+box.maxY+" Z2:"+box.maxZ));
+        axis = box.getLengthX() >= box.getLengthZ() ? "X" : "Z"; // TODO naïve approach
+        List<ItemFrameEntity> itemFrameEntities = mc.world.getEntitiesByType(TypeFilter.instanceOf(ItemFrameEntity.class),box, EntityPredicates.VALID_ENTITY);
+        ChatUtils.sendMsg(Text.of("Found "+itemFrameEntities.size()+" item frames."));
+        ChatUtils.sendMsg(Text.of("--------------------------------------------"));
+        for(ItemFrameEntity itemFrameEntity : itemFrameEntities){
+            int mapWidthOffset = (int) (axis == "X" ? itemFrameEntity.getBlockX() : itemFrameEntity.getBlockZ()) % (int) (axis == "X" ? box.getLengthX() : box.getLengthZ()) ; // TODO calculate the real offset from the itemframe coords
+            int mapHeightOffset = itemFrameEntity.getBlockY() % (int) box.getLengthY();
+            ChatUtils.sendMsg(Text.of("Canvas size X:"+mapWidthOffset+" Y:"+mapHeightOffset));
+            Map map = new Map(itemFrameEntity.getHeldItemStack(), mapWidthOffset, mapHeightOffset);
+            mapsInItemFrames.add(map);
+        }
+        return mapsInItemFrames;
+    }
 
-    private ArrayList<Map> getMapsFromInventory(){
+    private void getMapsFromInventory() {
         PlayerInventory playerInventory = mc.player.getInventory();
         ArrayList<Map> mapsInInventory = new ArrayList<>();
         for (ItemStack itemStack : playerInventory.main.subList(9, 36)) {
@@ -173,7 +210,6 @@ public class MapDownloader extends Module {
                 mapsInInventory.add(map);
             }
         }
-        return mapsInInventory;
     }
 
 
@@ -236,6 +272,7 @@ public class MapDownloader extends Module {
             } else {
                 event.renderer.blockLines(x1,y1,z1, Color.MAGENTA,0);
                 event.renderer.blockLines(x2,y2,z2, Color.CYAN,0);
+                event.renderer.boxLines(pos1.getX()+1.1,pos1.getY()+1.1,pos1.getZ()+1.1, pos2.getX()-0.1,pos2.getY()-0.1,pos2.getZ()-0.1,Color.ORANGE,0);
             }
         } catch (Exception e) {
             LOG.warn("Couldn't render the block outlines in the map selection");

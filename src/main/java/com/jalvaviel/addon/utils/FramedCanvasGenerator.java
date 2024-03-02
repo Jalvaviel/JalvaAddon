@@ -56,6 +56,12 @@ public class FramedCanvasGenerator {
         generateBackgroundCanvas(1, 1, "single_bg");
     }
 
+    public FramedCanvasGenerator(int tileWidth, int tileHeight) {
+        getCanvasAtlas();
+        getSubImages();
+        generateBackgroundCanvas(tileWidth, tileHeight, "custom_bg");
+    }
+
     private void getSubImages() {
         topLeft = canvasAtlas.getSubimage(0, 0, 7, 7);
         topRight = canvasAtlas.getSubimage(137, 0, 7, 7);

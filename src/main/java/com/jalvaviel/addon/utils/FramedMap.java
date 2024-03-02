@@ -18,7 +18,7 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
 public class FramedMap extends Map {
     private BufferedImage mapBG;
 
-    public FramedMap(ItemStack mapStack, int width, int height) {
+    public FramedMap(ItemStack mapStack, int width, int height) { //Todo framed Canvas intergration
         super(mapStack, width, height);
         getMapBG();
         setMapFrame();

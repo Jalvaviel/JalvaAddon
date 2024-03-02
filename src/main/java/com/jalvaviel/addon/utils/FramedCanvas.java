@@ -22,6 +22,13 @@ public class FramedCanvas extends Canvas {
         setCanvasFrame();
     }
 
+    public FramedCanvas(ArrayList<Map> mapMatrix, int tileWidth, int tileHeight) {
+        super(mapMatrix, tileWidth, tileHeight);
+        FramedCanvasGenerator customFrame = new FramedCanvasGenerator(tileWidth, tileHeight);
+        getCanvasFrame(CanvasType.CUSTOM);
+        setCanvasFrame();
+    }
+
     private void getCanvasFrame(CanvasType canvasType){
         String location = "jalvaaddon:textures/single_bg.png";
         switch(canvasType){
@@ -36,6 +43,9 @@ public class FramedCanvas extends Canvas {
                 break;
             case DISPENSER:
                 location = "jalvaaddon:textures/dispenser_bg.png";
+                break;
+            case CUSTOM:
+                location = "jalvaaddon:textures/custom_bg.png";
                 break;
             default:
                 break;
@@ -52,7 +62,7 @@ public class FramedCanvas extends Canvas {
         }
     }
     private void setCanvasFrame(){
-        BufferedImage resultImage = new BufferedImage(this.width+14, this.height+14, BufferedImage.TYPE_INT_ARGB);
+        BufferedImage resultImage = new BufferedImage(this.pixelWidth+14, this.pixelHeight+14, BufferedImage.TYPE_INT_ARGB);
         Graphics2D graphics = resultImage.createGraphics();
         graphics.drawImage(this.canvasBG, 0, 0, null);
         graphics.drawImage(this.bufferedCanvas, 7, 7, null);
