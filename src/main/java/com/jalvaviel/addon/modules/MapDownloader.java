@@ -91,6 +91,7 @@ public class MapDownloader extends Module {
     public String folderString = "maps";
     public String axis;
     CanvasGenerator canvasGenerator;
+
     public MapDownloader() {
         super(Addon.CATEGORY, "Map Downloader", "Download maps nearby.");
     }

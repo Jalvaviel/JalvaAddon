@@ -4,6 +4,7 @@ import net.minecraft.resource.Resource;
 import net.minecraft.util.Identifier;
 
 import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -13,7 +14,6 @@ import java.util.Optional;
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class FrameBorderEffect {
-    int frameMarginPixels = 14;
     public BufferedImage getFrameImageFromType(CanvasData canvasData){
         String location = "jalvaaddon:textures/single_bg.png";
         BufferedImage bgImage = null;
@@ -45,12 +45,17 @@ public class FrameBorderEffect {
         }
         catch(IOException e){
             //super.generateBlankImage(); //TODO use the procedural generator to generate a default one.
-            ProceduralFrameGenerator customFrameGenerator = new ProceduralFrameGenerator(canvasData.widthInTiles,canvasData.heightInTiles);
-            customFrameGenerator
+            ProceduralFrameGenerator proceduralFrameGenerator = new ProceduralFrameGenerator(canvasData.widthInTiles,canvasData.heightInTiles);
         }
         return bgImage;
     }
     public CanvasData addFrameToCanvas(CanvasData canvasData){
-        canvasData.canvasType
+        BufferedImage resultImage = new BufferedImage(Utils.PIXELS_IN_MAP + Utils.OFFSET, Utils.PIXELS_IN_MAP + Utils.OFFSET, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D graphics = resultImage.createGraphics();
+        graphics.drawImage(getFrameImageFromType(canvasData), 0, 0, null);
+        graphics.drawImage(canvasData.bufferedCanvas, Utils.HALF_OFFSET, Utils.HALF_OFFSET, null);
+        graphics.dispose();
+        CanvasData framedCanvasData = new CanvasData(resultImage,Utils.generateBufferedImageIdentifier(resultImage),canvasData.canvasType, canvasData.widthInTiles, canvasData.heightInTiles);
+        return framedCanvasData;
     }
 }

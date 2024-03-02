@@ -17,6 +17,8 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class Utils {
     static final int PIXELS_IN_MAP = 128;
+    static final int HALF_OFFSET = 7;
+    static final int OFFSET = 14;
 
     /**
      * UUID generation

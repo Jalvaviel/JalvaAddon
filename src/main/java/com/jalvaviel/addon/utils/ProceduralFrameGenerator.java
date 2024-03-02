@@ -31,11 +31,6 @@ public class ProceduralFrameGenerator {
             this.value = value;
         }
     }
-    private int width = 0;
-    private int height = 0;
-    private int tileWidth = 9;
-    private int tileHeight = 9;
-    private int offset = 14;
 
     private BufferedImage getCanvasAtlas() {
         String location = "jalvaaddon:textures/map_atlas.png";
@@ -72,37 +67,35 @@ public class ProceduralFrameGenerator {
         return bufferedImages;
     }
     private BufferedImage generateBackgroundCanvas(int tileWidth, int tileHeight, BufferedImage[] bufferedAtlasImages) {
-        final int halfOffset = 7;
-        int offset = halfOffset * 2;
-        width = (Utils.PIXELS_IN_MAP * tileWidth) + offset;
-        height = (Utils.PIXELS_IN_MAP * tileHeight) + offset;
+        int width = (Utils.PIXELS_IN_MAP * tileWidth) + Utils.OFFSET;
+        int height = (Utils.PIXELS_IN_MAP * tileHeight) + Utils.OFFSET;
         BufferedImage resultImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         Graphics2D graphics = resultImage.createGraphics();
 
         // Draw top and bottom edges
         for (int x = 0; x < Utils.PIXELS_IN_MAP*tileWidth; x += Utils.PIXELS_IN_MAP) { // Adjusted width
-            graphics.drawImage(bufferedAtlasImages[SubImageID.TOP.value], x+halfOffset, 0, null);
-            graphics.drawImage(bufferedAtlasImages[SubImageID.BOT.value], x+halfOffset, Utils.PIXELS_IN_MAP*tileHeight+halfOffset, null); // TODO
+            graphics.drawImage(bufferedAtlasImages[SubImageID.TOP.value], x+Utils.HALF_OFFSET, 0, null);
+            graphics.drawImage(bufferedAtlasImages[SubImageID.BOT.value], x+Utils.HALF_OFFSET, Utils.PIXELS_IN_MAP*tileHeight+Utils.HALF_OFFSET, null); // TODO
         }
 
         // Draw left and right edges
         for (int y = 0; y < Utils.PIXELS_IN_MAP*tileHeight; y += Utils.PIXELS_IN_MAP) { // Adjusted height
-            graphics.drawImage(bufferedAtlasImages[SubImageID.LEFT.value], 0, y+halfOffset, null);
-            graphics.drawImage(bufferedAtlasImages[SubImageID.RIGHT.value], Utils.PIXELS_IN_MAP*tileWidth+halfOffset, y+halfOffset, null); // TODO
+            graphics.drawImage(bufferedAtlasImages[SubImageID.LEFT.value], 0, y+Utils.HALF_OFFSET, null);
+            graphics.drawImage(bufferedAtlasImages[SubImageID.RIGHT.value], Utils.PIXELS_IN_MAP*tileWidth+Utils.HALF_OFFSET, y+Utils.HALF_OFFSET, null); // TODO
         }
 
         // Draw background
         for (int i = 0; i < Utils.PIXELS_IN_MAP*tileHeight; i += Utils.PIXELS_IN_MAP) { // Adjusted height
             for (int j = 0; j < Utils.PIXELS_IN_MAP*tileWidth; j += Utils.PIXELS_IN_MAP) { // Adjusted width
-                graphics.drawImage(bufferedAtlasImages[SubImageID.BACKGROUND.value], j+halfOffset, i+halfOffset, null);
+                graphics.drawImage(bufferedAtlasImages[SubImageID.BACKGROUND.value], j+Utils.HALF_OFFSET, i+Utils.HALF_OFFSET, null);
             }
         }
 
         // Draw corners
         graphics.drawImage(bufferedAtlasImages[SubImageID.TOP_LEFT.value], 0, 0, null);
-        graphics.drawImage(bufferedAtlasImages[SubImageID.TOP_RIGHT.value], width-halfOffset, 0, null);
-        graphics.drawImage(bufferedAtlasImages[SubImageID.BOT_LEFT.value], 0, height-halfOffset, null);
-        graphics.drawImage(bufferedAtlasImages[SubImageID.BOT_RIGHT.value], width-halfOffset, height-halfOffset, null);
+        graphics.drawImage(bufferedAtlasImages[SubImageID.TOP_RIGHT.value], width-Utils.HALF_OFFSET, 0, null);
+        graphics.drawImage(bufferedAtlasImages[SubImageID.BOT_LEFT.value], 0, height-Utils.HALF_OFFSET, null);
+        graphics.drawImage(bufferedAtlasImages[SubImageID.BOT_RIGHT.value], width-Utils.HALF_OFFSET, height-Utils.HALF_OFFSET, null);
         graphics.dispose();
 
         /*
@@ -119,6 +112,4 @@ public class ProceduralFrameGenerator {
         */
         return resultImage;
     }
-
-
 }
