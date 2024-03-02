@@ -1,7 +1,5 @@
 package com.jalvaviel.addon.utils;
 
-import com.jalvaviel.addon.Addon;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.resource.Resource;
 import net.minecraft.util.Identifier;
 
@@ -9,7 +7,6 @@ import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.util.Optional;
 
@@ -17,24 +14,32 @@ import static meteordevelopment.meteorclient.MeteorClient.LOG;
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class ProceduralFrameGenerator {
-    private BufferedImage canvasAtlas;
+    enum SubImageID {
+        TOP(0),
+        LEFT(1),
+        RIGHT(2),
+        BOT(3),
+        TOP_LEFT(4),
+        TOP_RIGHT(5),
+        BOT_LEFT(6),
+        BOT_RIGHT(7),
+        BACKGROUND(8),
+        MAX(9);
+
+        protected final int value;
+        SubImageID(int value){
+            this.value = value;
+        }
+    }
     private int width = 0;
     private int height = 0;
     private int tileWidth = 9;
     private int tileHeight = 9;
     private int offset = 14;
-    private BufferedImage top;
-    private BufferedImage bot;
-    private BufferedImage left;
-    private BufferedImage right;
-    private BufferedImage topLeft;
-    private BufferedImage topRight;
-    private BufferedImage botLeft;
-    private BufferedImage botRight;
-    private BufferedImage background;
 
-    private void getCanvasAtlas() {
+    private BufferedImage getCanvasAtlas() {
         String location = "jalvaaddon:textures/map_atlas.png";
+        BufferedImage canvasAtlas = null;
         try {
             Identifier identifier = Identifier.tryParse(location);
             Optional<Resource> resource = mc.getResourceManager().getResource(identifier);
@@ -44,68 +49,63 @@ public class ProceduralFrameGenerator {
         } catch (IOException e) {
             LOG.debug("Couldn't generate canvas from map atlas");
         }
-    }
-
-    public ProceduralFrameGenerator(CanvasType canvasType) {
-        getCanvasAtlas();
-        getSubImages();
-        generateBackgroundCanvas(9, 4, "player_inventory_bg");
-        generateBackgroundCanvas(9, 3, "chest_bg");
-        generateBackgroundCanvas(9, 6, "double_chest_bg");
-        generateBackgroundCanvas(3, 3, "dispenser_bg");
-        generateBackgroundCanvas(1, 1, "single_bg");
+        return canvasAtlas;
     }
 
     public ProceduralFrameGenerator(int tileWidth, int tileHeight) {
-        getCanvasAtlas();
-        getSubImages();
-        generateBackgroundCanvas(tileWidth, tileHeight, "custom_bg");
+        BufferedImage canvasAtlas = getCanvasAtlas();
+        BufferedImage[] bufferedSubImages = getSubImages(canvasAtlas);
+        BufferedImage bufferedCanvas = generateBackgroundCanvas(tileWidth, tileHeight, bufferedSubImages);
     }
 
-    private void getSubImages() {
-        topLeft = canvasAtlas.getSubimage(0, 0, 7, 7);
-        topRight = canvasAtlas.getSubimage(137, 0, 7, 7);
-        botLeft = canvasAtlas.getSubimage(0, 137, 7, 7);
-        botRight = canvasAtlas.getSubimage(137, 137, 7, 7);
-        top = canvasAtlas.getSubimage(8, 0, 128, 7);
-        bot = canvasAtlas.getSubimage(8, 137, 128, 7);
-        left = canvasAtlas.getSubimage(0, 8, 7, 128);
-        right = canvasAtlas.getSubimage(137, 8, 7, 128);
-        background = canvasAtlas.getSubimage(8, 8, 128, 128);
+    private BufferedImage[] getSubImages(BufferedImage canvasAtlas) {
+        BufferedImage bufferedImages[] = new BufferedImage[SubImageID.MAX.value];
+        bufferedImages[SubImageID.TOP_LEFT.value] = canvasAtlas.getSubimage(0, 0, 7, 7);
+        bufferedImages[SubImageID.TOP_RIGHT.value] = canvasAtlas.getSubimage(137, 0, 7, 7);
+        bufferedImages[SubImageID.BOT_LEFT.value] = canvasAtlas.getSubimage(0, 137, 7, 7);
+        bufferedImages[SubImageID.BOT_RIGHT.value] = canvasAtlas.getSubimage(137, 137, 7, 7);
+        bufferedImages[SubImageID.TOP.value] = canvasAtlas.getSubimage(8, 0, 128, 7);
+        bufferedImages[SubImageID.BOT.value] = canvasAtlas.getSubimage(8, 137, 128, 7);
+        bufferedImages[SubImageID.LEFT.value] = canvasAtlas.getSubimage(0, 8, 7, 128);
+        bufferedImages[SubImageID.RIGHT.value] = canvasAtlas.getSubimage(137, 8, 7, 128);
+        bufferedImages[SubImageID.BACKGROUND.value] = canvasAtlas.getSubimage(8, 8, 128, 128);
+        return bufferedImages;
     }
-    private void generateBackgroundCanvas(int tileWidth, int tileHeight, String filename) {
-        offset = 14;
-        width = (128 * tileWidth) + offset;
-        height = (128 * tileHeight) + offset;
+    private BufferedImage generateBackgroundCanvas(int tileWidth, int tileHeight, BufferedImage[] bufferedAtlasImages) {
+        final int halfOffset = 7;
+        int offset = halfOffset * 2;
+        width = (Utils.PIXELS_IN_MAP * tileWidth) + offset;
+        height = (Utils.PIXELS_IN_MAP * tileHeight) + offset;
         BufferedImage resultImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         Graphics2D graphics = resultImage.createGraphics();
 
         // Draw top and bottom edges
-        for (int x = 0; x < 128*tileWidth; x += 128) { // Adjusted width
-            graphics.drawImage(top, x+7, 0, null);
-            graphics.drawImage(bot, x+7, 128*tileHeight+7, null); // TODO
+        for (int x = 0; x < Utils.PIXELS_IN_MAP*tileWidth; x += Utils.PIXELS_IN_MAP) { // Adjusted width
+            graphics.drawImage(bufferedAtlasImages[SubImageID.TOP.value], x+halfOffset, 0, null);
+            graphics.drawImage(bufferedAtlasImages[SubImageID.BOT.value], x+halfOffset, Utils.PIXELS_IN_MAP*tileHeight+halfOffset, null); // TODO
         }
 
         // Draw left and right edges
-        for (int y = 0; y < 128*tileHeight; y += 128) { // Adjusted height
-            graphics.drawImage(left, 0, y+7, null);
-            graphics.drawImage(right, 128*tileWidth+7, y+7, null); // TODO
+        for (int y = 0; y < Utils.PIXELS_IN_MAP*tileHeight; y += Utils.PIXELS_IN_MAP) { // Adjusted height
+            graphics.drawImage(bufferedAtlasImages[SubImageID.LEFT.value], 0, y+halfOffset, null);
+            graphics.drawImage(bufferedAtlasImages[SubImageID.RIGHT.value], Utils.PIXELS_IN_MAP*tileWidth+halfOffset, y+halfOffset, null); // TODO
         }
 
         // Draw background
-        for (int i = 0; i < 128*tileHeight; i += 128) { // Adjusted height
-            for (int j = 0; j < 128*tileWidth; j += 128) { // Adjusted width
-                graphics.drawImage(background, j+7, i+7, null);
+        for (int i = 0; i < Utils.PIXELS_IN_MAP*tileHeight; i += Utils.PIXELS_IN_MAP) { // Adjusted height
+            for (int j = 0; j < Utils.PIXELS_IN_MAP*tileWidth; j += Utils.PIXELS_IN_MAP) { // Adjusted width
+                graphics.drawImage(bufferedAtlasImages[SubImageID.BACKGROUND.value], j+halfOffset, i+halfOffset, null);
             }
         }
 
         // Draw corners
-        graphics.drawImage(topLeft, 0, 0, null);
-        graphics.drawImage(topRight, width-7, 0, null);
-        graphics.drawImage(botLeft, 0, height-7, null);
-        graphics.drawImage(botRight, width-7, height-7, null);
+        graphics.drawImage(bufferedAtlasImages[SubImageID.TOP_LEFT.value], 0, 0, null);
+        graphics.drawImage(bufferedAtlasImages[SubImageID.TOP_RIGHT.value], width-halfOffset, 0, null);
+        graphics.drawImage(bufferedAtlasImages[SubImageID.BOT_LEFT.value], 0, height-halfOffset, null);
+        graphics.drawImage(bufferedAtlasImages[SubImageID.BOT_RIGHT.value], width-halfOffset, height-halfOffset, null);
         graphics.dispose();
 
+        /*
         try {
             File outputDir = new File(FabricLoader.getInstance().getGameDir().resolve("maps").toString());
             if (!outputDir.exists() && !outputDir.mkdirs()) {
@@ -116,6 +116,8 @@ public class ProceduralFrameGenerator {
         } catch (IOException e) {
             Addon.LOG.warn("Failed to store the generated canvas: {}", e.getMessage());
         }
+        */
+        return resultImage;
     }
 
 

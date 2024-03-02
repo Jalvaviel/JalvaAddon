@@ -9,8 +9,6 @@ import java.util.UUID;
 
 import static com.jalvaviel.addon.Addon.LOG;
 public class CanvasGenerator{
-    int pixelDimensions = 128;
-
     public CanvasData generateCanvasFromMapMatrix(Map[][] mapMatrix, CanvasType canvasType) {
         int tileWidth = mapMatrix.length;
         int tileHeight = mapMatrix[0].length;
@@ -22,7 +20,7 @@ public class CanvasGenerator{
             for (int j = 0; j < tileWidth; j++) {
                 Map currentMap = mapMatrix[j][i];
                 if (currentMap != null) {
-                    graphics.drawImage(currentMap.bufferedMap, j * pixelDimensions, i * pixelDimensions, null);
+                    graphics.drawImage(currentMap.bufferedMap, j * Utils.PIXELS_IN_MAP, i * Utils.PIXELS_IN_MAP, null);
                 }
             }
         }

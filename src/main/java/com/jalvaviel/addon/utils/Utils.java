@@ -16,6 +16,7 @@ import static com.jalvaviel.addon.Addon.LOG;
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class Utils {
+    static final int PIXELS_IN_MAP = 128;
 
     /**
      * UUID generation
