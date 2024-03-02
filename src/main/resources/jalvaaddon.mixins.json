@@ -3,7 +3,8 @@
   "package": "com.jalvaviel.addon.mixin",
   "compatibilityLevel": "JAVA_17",
   "client": [
-    "MushroomWaterMixin"
+    "MushroomWaterMixin",
+    "NukerMixin"
   ],
   "injectors": {
     "defaultRequire": 1

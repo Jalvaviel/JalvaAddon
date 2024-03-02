@@ -1,9 +1,12 @@
 package com.jalvaviel.addon;
+import com.jalvaviel.addon.commands.Pos1;
+import com.jalvaviel.addon.commands.Pos2;
 import com.jalvaviel.addon.modules.*;
 import com.jalvaviel.addon.utils.Canvas;
 import com.jalvaviel.addon.utils.FramedCanvasGenerator;
 import com.mojang.logging.LogUtils;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
+import meteordevelopment.meteorclient.commands.Commands;
 import meteordevelopment.meteorclient.systems.hud.HudGroup;
 import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.systems.modules.Modules;
@@ -18,20 +21,21 @@ public class Addon extends MeteorAddon {
 
     @Override
     public void onInitialize() {
+        // Framed canvas atlas generator
         FramedCanvasGenerator framedCanvasGenerator = new FramedCanvasGenerator(Canvas.CanvasType.PLAYER_INVENTORY);
+
         // Modules
         Modules.get().add(new MapDownloader());
         Modules.get().add(new MapBoundaries());
-        //Modules.get().add(new MapStorage());
         Modules.get().add(new MushroomWater());
 
         // Commands
-        //Commands.add(new CommandExample());
+        //Commands.add(new Pos1());
+        //Commands.add(new Pos2());
 
         // HUD
         //Hud.get().register(HudExample.INFO);
     }
-
     @Override
     public void onRegisterCategories() {
         Modules.registerCategory(CATEGORY);

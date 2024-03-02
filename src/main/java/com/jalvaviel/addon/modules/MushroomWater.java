@@ -1,11 +1,17 @@
 package com.jalvaviel.addon.modules;
 
 import com.jalvaviel.addon.Addon;
+import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.settings.ColorSetting;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.settings.SettingGroup;
+import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.orbit.EventHandler;
+
+import static com.jalvaviel.addon.commands.Pos1.*;
+import static com.jalvaviel.addon.commands.Pos2.*;
 
 public class MushroomWater extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();

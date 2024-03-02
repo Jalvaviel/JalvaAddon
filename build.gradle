@@ -17,6 +17,10 @@ repositories {
         name = "Meteor Dev Snapshots"
         url = "https://maven.meteordev.org/snapshots"
     }
+    maven {
+        name = "Fabric API"
+        url = "https://www.cursemaven.com/"
+    }
 }
 
 dependencies {
@@ -24,6 +28,7 @@ dependencies {
     minecraft "com.mojang:minecraft:${project.minecraft_version}"
     mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    modImplementation "curse.maven:fabric-api-306612:4905460"
     // Meteor
     modImplementation "meteordevelopment:meteor-client:${project.meteor_version}"
 
