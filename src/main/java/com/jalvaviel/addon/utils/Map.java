@@ -4,6 +4,8 @@ import net.minecraft.block.MapColor;
 import net.minecraft.item.FilledMapItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.map.MapState;
+import net.minecraft.util.math.Direction;
+
 import java.awt.image.BufferedImage;
 import java.util.UUID;
 
@@ -18,22 +20,22 @@ public class Map {
     public UUID imageID = null;
     protected int canvasX;
     protected int canvasY;
+    protected Direction mapFacing;
 
-    public Map(ItemStack mapStack, int width, int height, int canvasX, int canvasY) { // Constructor for arbitrary width and height
+    public Map(ItemStack mapStack, int width, int height, Direction mapFacing) { // Constructor for arbitrary width and height
         this.mapStack = mapStack;
         this.width = width;
         this.height = height;
-        this.canvasX = canvasX;
-        this.canvasY = canvasY;
         this.bufferedMap = new BufferedImage(this.width, this.height, BufferedImage.TYPE_INT_ARGB);
+        this.mapFacing = mapFacing;
         generateMap();
     }
 
-    public Map(ItemStack mapStack) {
-        this(mapStack,128,128,0,0);
+    public Map(ItemStack mapStack, Direction mapFacing) {
+        this(mapStack,128,128, mapFacing);
     }
-    public Map(ItemStack mapStack, int canvasX, int canvasY) {
-        this(mapStack,128,128,canvasX,canvasY);
+    public Map(ItemStack mapStack) {
+        this(mapStack,128,128, Direction.UP);
     }
     public Map(boolean isEmptyMap) {
         this.width = 128;

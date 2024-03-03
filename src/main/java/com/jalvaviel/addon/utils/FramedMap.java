@@ -5,6 +5,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.resource.Resource;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.Direction;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -18,14 +19,18 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
 public class FramedMap extends Map {
     private BufferedImage mapBG;
 
-    public FramedMap(ItemStack mapStack, int width, int height) { //Todo framed Canvas intergration
-        super(mapStack, width, height);
+    public FramedMap(ItemStack mapStack, int width, int height, Direction mapFacing) { //Todo framed Canvas intergration
+        super(mapStack, width, height, mapFacing);
         getMapBG();
         setMapFrame();
     }
 
+    public FramedMap(ItemStack mapStack, Direction mapFacing) {
+        this(mapStack, 128, 128, mapFacing);
+    }
+
     public FramedMap(ItemStack mapStack) {
-        this(mapStack, 128, 128);
+        this(mapStack, 128, 128, Direction.UP);
     }
 
     private void getMapBG(){

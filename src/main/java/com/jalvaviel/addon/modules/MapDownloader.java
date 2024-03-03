@@ -27,6 +27,7 @@ import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Direction;
 
 import java.util.*;
 
@@ -132,6 +133,8 @@ public class MapDownloader extends Module {
 
         List<ItemFrameEntity> itemFrameEntities = mc.world.getEntitiesByType(TypeFilter.instanceOf(ItemFrameEntity.class), box.getBox3D(), EntityPredicates.VALID_ENTITY);
         ChatUtils.sendMsg(Text.of("Entities: "+itemFrameEntities.size()));
+        Direction commonDirection = Direction.UP;
+
         Map[][] canvasMatrix = new Map[(int) box.getHorizontalLength()][(int) box.getVerticalLength()];
 
         for(ItemFrameEntity itemFrameEntity : itemFrameEntities){
@@ -145,7 +148,14 @@ public class MapDownloader extends Module {
             int indexArrayHorizontal = (int) (itemFrameHorizontalCoordsWorld - minCoordHorizontal);
             int indexArrayVertical = (int) (itemFrameVerticalCoordsWorld - minCoordVertical);
             if(itemFrameEntity.getHeldItemStack().getItem() instanceof FilledMapItem){
-                canvasMatrix[indexArrayHorizontal][indexArrayVertical] = new Map(itemFrameEntity.getHeldItemStack());
+                if(commonDirection == Direction.UP) {
+                    commonDirection = itemFrameEntity.getHorizontalFacing();
+                }
+                if (saveMapsAsCanvas.get() && itemFrameEntity.getHorizontalFacing() == commonDirection) {
+                    canvasMatrix[indexArrayHorizontal][indexArrayVertical] = new Map(itemFrameEntity.getHeldItemStack(), itemFrameEntity.getHorizontalFacing());
+                } else if (!saveMapsAsCanvas.get()){
+                    canvasMatrix[indexArrayHorizontal][indexArrayVertical] = new Map(itemFrameEntity.getHeldItemStack(), itemFrameEntity.getHorizontalFacing());
+                }
             }
         }
         return canvasMatrix;
