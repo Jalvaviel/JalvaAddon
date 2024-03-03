@@ -13,7 +13,7 @@ public class CanvasGenerator {
     public CanvasData generateCanvasFromMapMatrix(Map[][] mapMatrix, CanvasType canvasType) {
         int tileWidth = mapMatrix.length;
         int tileHeight = mapMatrix[0].length;
-        BufferedImage bufferedCanvas = new BufferedImage(tileWidth, tileHeight, BufferedImage.TYPE_INT_ARGB);
+        BufferedImage bufferedCanvas = new BufferedImage(tileWidth * Utils.PIXELS_IN_MAP, tileHeight * Utils.PIXELS_IN_MAP, BufferedImage.TYPE_INT_ARGB);
 
         Graphics2D graphics = bufferedCanvas.createGraphics();
 
@@ -21,7 +21,8 @@ public class CanvasGenerator {
             for (int j = 0; j < tileWidth; j++) {
                 Map currentMap = mapMatrix[j][i];
                 if (currentMap != null) {
-                    graphics.drawImage(currentMap.bufferedMap, j * Utils.PIXELS_IN_MAP, i * Utils.PIXELS_IN_MAP, null);
+                    int flippedImageIndex = (tileHeight-i) * Utils.PIXELS_IN_MAP;
+                    graphics.drawImage(currentMap.bufferedMap, j * Utils.PIXELS_IN_MAP, flippedImageIndex-Utils.PIXELS_IN_MAP, null);
                 }
             }
         }

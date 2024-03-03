@@ -144,7 +144,9 @@ public class MapDownloader extends Module {
 
             int indexArrayHorizontal = (int) (itemFrameHorizontalCoordsWorld - minCoordHorizontal);
             int indexArrayVertical = (int) (itemFrameVerticalCoordsWorld - minCoordVertical);
-            canvasMatrix[indexArrayHorizontal][indexArrayVertical]= new Map(itemFrameEntity.getHeldItemStack());
+            if(itemFrameEntity.getHeldItemStack().getItem() instanceof FilledMapItem){
+                canvasMatrix[indexArrayHorizontal][indexArrayVertical] = new Map(itemFrameEntity.getHeldItemStack());
+            }
         }
         return canvasMatrix;
     }
