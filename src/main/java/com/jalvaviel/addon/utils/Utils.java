@@ -69,4 +69,8 @@ public class Utils {
     public static void writeCanvasToFolder(CanvasData canvasData, String fullPath){
         writeImageToFolder(canvasData.bufferedCanvas, fullPath);
     }
+
+    public enum Axis{
+        X, Y, Z, UNKNOWN;
+    }
 }

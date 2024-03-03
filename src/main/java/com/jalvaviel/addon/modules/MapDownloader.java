@@ -93,7 +93,7 @@ public class MapDownloader extends Module {
     );
     public BlockPos pos1;
     public BlockPos pos2;
-    public Box box;
+    public CanvasBox box;
     public int yaw;
     public String folderString = "maps";
     public String axis;
@@ -130,67 +130,34 @@ public class MapDownloader extends Module {
         // EAST +X
         // WEST -X
 
-        axis = box.getLengthX() >= box.getLengthZ() ? "X" : "Z"; // TODO naïve approach
-        List<ItemFrameEntity> itemFrameEntities = mc.world.getEntitiesByType(TypeFilter.instanceOf(ItemFrameEntity.class), box, EntityPredicates.VALID_ENTITY);
-        int canvasHorizontalLength = (int) (axis == "X" ? box.getLengthX() : box.getLengthZ());
+        List<ItemFrameEntity> itemFrameEntities = mc.world.getEntitiesByType(TypeFilter.instanceOf(ItemFrameEntity.class), box.getBox3D(), EntityPredicates.VALID_ENTITY);
         ChatUtils.sendMsg(Text.of("Entities: "+itemFrameEntities.size()));
-        Map[][] canvasMatrix = new Map[canvasHorizontalLength-1][(int) box.getLengthY()-1];
+        Map[][] canvasMatrix = new Map[(int) box.getHorizontalLength()][(int) box.getVerticalLength()];
 
         for(ItemFrameEntity itemFrameEntity : itemFrameEntities){
-            int itemFrameHorizontalCoordsWorld = axis == "X" ? itemFrameEntity.getBlockX() : itemFrameEntity.getBlockZ();
-            int itemFrameVerticalCoordsWorld = itemFrameEntity.getBlockY();
-            int boxHorizontalCorner = (int) (axis == "X" ? box.minX : box.minZ);
-            int boxVerticalCorner = (int) box.maxY;
+            Utils.Axis boxAxis = box.getHorizontalAxis();
+            double minCoordHorizontal = box.getMinHorizontal();
+            double minCoordVertical = box.getMinVertical();
 
-            int indexArrayHorizontal = abs(itemFrameHorizontalCoordsWorld - boxHorizontalCorner);
-            int indexArrayVertical = abs(itemFrameVerticalCoordsWorld - boxVerticalCorner);
-            //canvasMatrix[indexArrayHorizontal][indexArrayVertical]= new Map(itemFrameEntity.getHeldItemStack());
+            int itemFrameHorizontalCoordsWorld = box.getHorizontalAxis() == Utils.Axis.X ? itemFrameEntity.getBlockX() : itemFrameEntity.getBlockZ();
+            int itemFrameVerticalCoordsWorld = itemFrameEntity.getBlockY();
+
+            int indexArrayHorizontal = (int) (itemFrameHorizontalCoordsWorld - minCoordHorizontal);
+            int indexArrayVertical = (int) (itemFrameVerticalCoordsWorld - minCoordVertical);
+            canvasMatrix[indexArrayHorizontal][indexArrayVertical]= new Map(itemFrameEntity.getHeldItemStack());
         }
         return canvasMatrix;
     }
 
-    private void getMapsFromInventory() {
-        PlayerInventory playerInventory = mc.player.getInventory();
-        ArrayList<Map> mapsInInventory = new ArrayList<>();
-        for (ItemStack itemStack : playerInventory.main.subList(9, 36)) {
-            if(itemStack.getItem() instanceof FilledMapItem) {
-                if (mapBackground.get() && !saveMapsAsCanvas.get()) {
-                    FramedMap map = new FramedMap(itemStack);
-                    mapsInInventory.add(map);
-                } else {
-                    Map map = new Map(itemStack);
-                    mapsInInventory.add(map);
-                }
-            } else {
-                Map map = new Map(true);
-                mapsInInventory.add(map);
-            }
-        }
-        // This is done to flip the first 9 slots of the inventory from the top part to the bottom in case there's a canvas.
-        for (ItemStack itemStack : playerInventory.main.subList(0, 9)) {
-            if(itemStack.getItem() instanceof FilledMapItem) {
-                if (mapBackground.get() && !saveMapsAsCanvas.get()) {
-                    FramedMap map = new FramedMap(itemStack);
-                    mapsInInventory.add(map);
-                } else {
-                    Map map = new Map(itemStack);
-                    mapsInInventory.add(map);
-                }
-            } else {
-                Map map = new Map(true);
-                mapsInInventory.add(map);
-            }
-        }
-    }
-
-    private boolean tryUpdateBox(BlockPos blockPos1, BlockPos blockPos2){
-        if (blockPos1 != null && blockPos2 != null && // All the blockpos have to share at least 1 axis (X,Z) and be not null
-            (blockPos2.getX()-blockPos1.getX()) * (blockPos2.getZ()-blockPos1.getZ()) == 0) {
-                Box tempBox = new Box(blockPos1.toCenterPos(), blockPos2.toCenterPos());
-                box = new Box(tempBox.minX-0.5, tempBox.minY-0.5, tempBox.minZ-0.5, tempBox.maxX+0.5, tempBox.maxY+0.5, tempBox.maxZ+0.5);
+    private boolean tryUpdateBox(BlockPos blockPos1, BlockPos blockPos2) {
+        if (blockPos1 != null && blockPos2 != null) {
+            CanvasBox canvasBox = new CanvasBox(blockPos1, blockPos2);
+            if (canvasBox.isFlat()) {
+                box = canvasBox;
                 return true;
-        } else {
-            box = null;
+            } else {
+                box = null;
+            }
         }
         return false;
     }
@@ -213,7 +180,8 @@ public class MapDownloader extends Module {
             } else {
                 event.renderer.blockLines(x1,y1,z1, Color.MAGENTA,0);
                 event.renderer.blockLines(x2,y2,z2, Color.CYAN,0);
-                event.renderer.boxLines(box.minX, box.minY, box.minZ, box.maxX, box.maxY, box.maxZ, Color.RED, 0);
+                Box box3D = box.getBox3D();
+                event.renderer.boxLines(box3D.minX, box3D.minY, box3D.minZ, box3D.maxX, box3D.maxY, box3D.maxZ, Color.RED, 0);
             }
         } catch (Exception e) {
             LOG.warn("Couldn't render the block outlines in the map selection");
