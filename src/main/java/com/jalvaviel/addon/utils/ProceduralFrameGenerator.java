@@ -98,18 +98,6 @@ public class ProceduralFrameGenerator {
         graphics.drawImage(bufferedAtlasImages[SubImageID.BOT_RIGHT.value], width-Utils.HALF_OFFSET, height-Utils.HALF_OFFSET, null);
         graphics.dispose();
 
-        /*
-        try {
-            File outputDir = new File(FabricLoader.getInstance().getGameDir().resolve("maps").toString());
-            if (!outputDir.exists() && !outputDir.mkdirs()) {
-                throw new IOException("Failed to create output directory");
-            }
-            File outputFile = new File(outputDir, filename+".png");
-            ImageIO.write(resultImage, "png", outputFile);
-        } catch (IOException e) {
-            Addon.LOG.warn("Failed to store the generated canvas: {}", e.getMessage());
-        }
-        */
         return resultImage;
     }
 }

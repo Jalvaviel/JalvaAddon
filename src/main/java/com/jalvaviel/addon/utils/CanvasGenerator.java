@@ -8,7 +8,8 @@ import java.io.IOException;
 import java.util.UUID;
 
 import static com.jalvaviel.addon.Addon.LOG;
-public class CanvasGenerator{
+public class CanvasGenerator {
+    private static CanvasGenerator canvasGenerator;
     public CanvasData generateCanvasFromMapMatrix(Map[][] mapMatrix, CanvasType canvasType) {
         int tileWidth = mapMatrix.length;
         int tileHeight = mapMatrix[0].length;
@@ -29,6 +30,13 @@ public class CanvasGenerator{
         UUID uuid = Utils.generateBufferedImageIdentifier(bufferedCanvas);
 
         return new CanvasData(bufferedCanvas, uuid, canvasType, tileWidth, tileHeight);
+    }
+
+    public static CanvasGenerator getCanvasGenerator(){
+        if(canvasGenerator == null){
+            canvasGenerator = new CanvasGenerator();
+        }
+        return canvasGenerator;
     }
 }
 

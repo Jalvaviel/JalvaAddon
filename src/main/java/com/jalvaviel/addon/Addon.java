@@ -1,6 +1,5 @@
 package com.jalvaviel.addon;
 import com.jalvaviel.addon.modules.*;
-import com.jalvaviel.addon.utils.Canvas;
 import com.mojang.logging.LogUtils;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
 import meteordevelopment.meteorclient.systems.hud.HudGroup;

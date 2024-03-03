@@ -8,7 +8,6 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.nio.Buffer;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -38,7 +37,7 @@ public class Utils {
      * Folder and .png creation
      **/
 
-    private static @NotNull String getFolderPath(boolean isServer, String folderString){
+    public static @NotNull String getFolderPath(boolean isServer, String folderString){
         if(isServer) {
             return FabricLoader.getInstance().getGameDir() + "\\" + folderString + "\\" + Objects.requireNonNull(mc.getCurrentServerEntry()).name;
         }else{
@@ -46,7 +45,7 @@ public class Utils {
         }
     }
 
-    private static void createWorldFolder(String folderPath) {
+    public static void createWorldFolder(String folderPath) {
         File mapImagesFolder = new File(folderPath);
         if (!mapImagesFolder.exists()) {
             if(!mapImagesFolder.mkdirs()) {
@@ -55,7 +54,7 @@ public class Utils {
         }
     }
 
-    private static void writeImageToFolder(BufferedImage bufferedImage, String fullPath){
+    public static void writeImageToFolder(BufferedImage bufferedImage, String fullPath){
         try {
             File output = new File(fullPath);
             ImageIO.write(bufferedImage, "png", output);
@@ -64,10 +63,10 @@ public class Utils {
         }
     }
 
-    private static void writeMapToFolder(Map map, String fullPath){
+    public static void writeMapToFolder(Map map, String fullPath){
         writeImageToFolder(map.bufferedMap, fullPath);
     }
-    private static void writeCanvasToFolder(CanvasData canvasData, String fullPath){
+    public static void writeCanvasToFolder(CanvasData canvasData, String fullPath){
         writeImageToFolder(canvasData.bufferedCanvas, fullPath);
     }
 }

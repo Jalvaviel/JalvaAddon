@@ -12,13 +12,14 @@ import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.orbit.EventHandler;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.decoration.ItemFrameEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.FilledMapItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
+
 import net.minecraft.predicate.entity.EntityPredicates;
 import net.minecraft.text.Text;
 import net.minecraft.util.TypeFilter;
@@ -26,17 +27,16 @@ import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Vec3i;
-import org.jetbrains.annotations.NotNull;
-import javax.imageio.ImageIO;
-import java.io.*;
+
 import java.util.*;
-import java.util.stream.Collectors;
+
 
 import static com.jalvaviel.addon.Addon.LOG;
+import static com.jalvaviel.addon.utils.CanvasGenerator.getCanvasGenerator;
 import static java.lang.Math.abs;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_KP_ADD;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_KP_SUBTRACT;
+import static org.lwjgl.glfw.GLFW.GLFW_KEY_KP_ENTER;
 
 public class MapDownloader extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -84,13 +84,20 @@ public class MapDownloader extends Module {
         .defaultValue(Keybind.fromKey(GLFW_KEY_KP_SUBTRACT))
         .build()
     );
+
+    public final Setting<Keybind> saveMapsKeybind = sgGeneral.add(new KeybindSetting.Builder()
+        .name("Save Maps Keybind")
+        .description("Save Maps by pressing this keybind")
+        .defaultValue(Keybind.fromKey(GLFW_KEY_KP_ENTER))
+        .build()
+    );
     public BlockPos pos1;
     public BlockPos pos2;
     public Box box;
     public int yaw;
     public String folderString = "maps";
     public String axis;
-    CanvasGenerator canvasGenerator;
+    boolean saveMapsKeybindPressed = false;
 
     public MapDownloader() {
         super(Addon.CATEGORY, "Map Downloader", "Download maps nearby.");
@@ -99,83 +106,35 @@ public class MapDownloader extends Module {
     @Override
     public void onActivate() {
         boolean isServer = mc.getCurrentServerEntry() != null;
-        String folderPath = getFolderPath(isServer);
-        createWorldFolder(folderPath);
-        if(mapDownloaderMode.get() == MapDownloaderModes.Inventories){
-            saveMaps(folderPath);
-            ChatUtils.sendMsg("JalvaAddons",Text.of("Saved maps from inventory successfully!"));
-            toggle();
-        }
+        String folderPath = Utils.getFolderPath(isServer, folderString);
+        Utils.createWorldFolder(folderPath);
         if(mapDownloaderMode.get() == MapDownloaderModes.Item_Frames){
-            if(pos1 == null || pos2 == null){
-                ChatUtils.sendMsg("JalvaAddons",Text.of("Please select with your wand the corners of your selection"));
-            } else {
-                box = new Box(pos1,pos2);
-                saveMaps(folderPath);
-                ChatUtils.sendMsg("JalvaAddons",Text.of("Saved maps from item frames successfully!"));
-                pos1 = null;
-                pos2 = null;
-                toggle();
+            if(pos1 == null || pos2 == null) {
+                ChatUtils.sendMsg("JalvaAddons", Text.of("Please select with your wand the corners of your selection"));
             }
         }
     }
 
-
     private void saveMaps(String folderPath){
-        Map[][] maps = null;
+        Map[][] maps;
         if(mapDownloaderMode.get() == MapDownloaderModes.Item_Frames){
             maps = getMapsFromItemFrames();
-            CanvasData canvasData = canvasGenerator.generateCanvasFromMapMatrix(maps,CanvasType.CUSTOM);
-            writeCanvasToFolder(canvasData,folderPath + "\\" + canvasData.canvasID + ".png");
+            CanvasData canvasData = getCanvasGenerator().generateCanvasFromMapMatrix(maps,CanvasType.CUSTOM);
+            Utils.writeCanvasToFolder(canvasData,folderPath + "\\" + canvasData.canvasID + ".png");
         }
-
-        /*
-        if(mapDownloaderMode.get() == MapDownloaderModes.Item_Frames){
-            maps = getMapsFromItemFrames();
-            if (saveMapsAsCanvas.get()) {
-                int width = (int) (axis=="X" ? box.getLengthX() : box.getLengthZ());
-                if (mapBackground.get()) {
-                    FramedCanvas canvas = new FramedCanvas(maps, width, (int) box.getLengthY());
-                    writeCanvasToFolder(canvas, folderPath + "\\" + canvas.canvasID + ".png");
-                } else {
-                    Canvas canvas = new Canvas(maps, width, (int) box.getLengthY());
-                    writeCanvasToFolder(canvas, folderPath + "\\" + canvas.canvasID + ".png");
-                }
-            } else {
-                for (Map map : maps) {
-                    writeMapToFolder(map, folderPath + "\\" + map.imageID + ".png");
-                }
-            }
-        }
-        if (mapDownloaderMode.get() == MapDownloaderModes.Player_Inventory) {
-            //maps = getMapsFromInventory();
-
-        }
-         */
-        /*
-        if (saveMapsAsCanvas.get()) {
-            if (mapBackground.get()) {
-                FramedCanvas canvas = new FramedCanvas(maps, Canvas.CanvasType.PLAYER_INVENTORY);
-                writeCanvasToFolder(canvas, folderPath + "\\" + canvas.canvasID + ".png");
-            } else {
-                Canvas canvas = new Canvas(maps, Canvas.CanvasType.PLAYER_INVENTORY);
-                writeCanvasToFolder(canvas, folderPath + "\\" + canvas.canvasID + ".png");
-            }
-        } else {
-            for (Map map : maps) {
-                writeMapToFolder(map, folderPath + "\\" + map.imageID + ".png");
-            }
-        }
-
-         */
     }
 
     private Map[][] getMapsFromItemFrames() { // TODO take into account if the player wants single maps or a canvas
-        box = new Box(pos1.getX()+1.1,pos1.getY()+1.1,pos1.getZ()+1.1, pos2.getX()-0.1,pos2.getY()-0.1,pos2.getZ()-0.1); // Shitass offsets
+        // NORTH -Z
+        // SOUTH +Z
+        // EAST +X
+        // WEST -X
+
         axis = box.getLengthX() >= box.getLengthZ() ? "X" : "Z"; // TODO naïve approach
-        List<ItemFrameEntity> itemFrameEntities = mc.world.getEntitiesByType(TypeFilter.instanceOf(ItemFrameEntity.class),box, EntityPredicates.VALID_ENTITY);
+        List<ItemFrameEntity> itemFrameEntities = mc.world.getEntitiesByType(TypeFilter.instanceOf(ItemFrameEntity.class), box, EntityPredicates.VALID_ENTITY);
         int canvasHorizontalLength = (int) (axis == "X" ? box.getLengthX() : box.getLengthZ());
-        Map[][] canvasMatrix = new Map[canvasHorizontalLength][(int) box.getLengthY()];
+        ChatUtils.sendMsg(Text.of("Entities: "+itemFrameEntities.size()));
+        Map[][] canvasMatrix = new Map[canvasHorizontalLength-1][(int) box.getLengthY()-1];
 
         for(ItemFrameEntity itemFrameEntity : itemFrameEntities){
             int itemFrameHorizontalCoordsWorld = axis == "X" ? itemFrameEntity.getBlockX() : itemFrameEntity.getBlockZ();
@@ -185,7 +144,7 @@ public class MapDownloader extends Module {
 
             int indexArrayHorizontal = abs(itemFrameHorizontalCoordsWorld - boxHorizontalCorner);
             int indexArrayVertical = abs(itemFrameVerticalCoordsWorld - boxVerticalCorner);
-            canvasMatrix[indexArrayHorizontal][indexArrayVertical]= new Map(itemFrameEntity.getHeldItemStack());
+            //canvasMatrix[indexArrayHorizontal][indexArrayVertical]= new Map(itemFrameEntity.getHeldItemStack());
         }
         return canvasMatrix;
     }
@@ -224,6 +183,17 @@ public class MapDownloader extends Module {
         }
     }
 
+    private boolean tryUpdateBox(BlockPos blockPos1, BlockPos blockPos2){
+        if (blockPos1 != null && blockPos2 != null && // All the blockpos have to share at least 1 axis (X,Z) and be not null
+            (blockPos2.getX()-blockPos1.getX()) * (blockPos2.getZ()-blockPos1.getZ()) == 0) {
+                Box tempBox = new Box(blockPos1.toCenterPos(), blockPos2.toCenterPos());
+                box = new Box(tempBox.minX-0.5, tempBox.minY-0.5, tempBox.minZ-0.5, tempBox.maxX+0.5, tempBox.maxY+0.5, tempBox.maxZ+0.5);
+                return true;
+        } else {
+            box = null;
+        }
+        return false;
+    }
 
     /**
      * Wand selection
@@ -243,7 +213,7 @@ public class MapDownloader extends Module {
             } else {
                 event.renderer.blockLines(x1,y1,z1, Color.MAGENTA,0);
                 event.renderer.blockLines(x2,y2,z2, Color.CYAN,0);
-                event.renderer.boxLines(pos1.getX()+1.1,pos1.getY()+1.1,pos1.getZ()+1.1, pos2.getX()-0.1,pos2.getY()-0.1,pos2.getZ()-0.1,Color.ORANGE,0);
+                event.renderer.boxLines(box.minX, box.minY, box.minZ, box.maxX, box.maxY, box.maxZ, Color.RED, 0);
             }
         } catch (Exception e) {
             LOG.warn("Couldn't render the block outlines in the map selection");
@@ -259,6 +229,7 @@ public class MapDownloader extends Module {
                 if (entity instanceof ItemFrameEntity) {
                     yaw = (int) entity.getYaw();
                     pos1 = entity.getBlockPos();
+                    tryUpdateBox(pos1, pos2);
                 }
             }
         }
@@ -269,8 +240,22 @@ public class MapDownloader extends Module {
                 if (entity instanceof ItemFrameEntity) {
                     yaw = (int) entity.getYaw();
                     pos2 = entity.getBlockPos();
+                    tryUpdateBox(pos1, pos2);
                 }
             }
+        }
+
+        if(saveMapsKeybind.get().isPressed()){ // Only run once is pressed
+            if(!saveMapsKeybindPressed){
+                saveMaps(folderString);
+                ChatUtils.sendMsg("JalvaAddons",Text.of("Saved maps from item frames successfully!"));
+                pos1 = null;
+                pos2 = null;
+                box = null;
+                saveMapsKeybindPressed = true;
+            }
+        } else {
+            saveMapsKeybindPressed = false;
         }
     }
 }
