@@ -32,7 +32,7 @@ public class ProceduralFrameGenerator {
         }
     }
 
-    private BufferedImage getCanvasAtlas() {
+    private static BufferedImage getCanvasAtlas() {
         String location = "jalvaaddon:textures/map_atlas.png";
         BufferedImage canvasAtlas = null;
         try {
@@ -47,13 +47,14 @@ public class ProceduralFrameGenerator {
         return canvasAtlas;
     }
 
-    public ProceduralFrameGenerator(int tileWidth, int tileHeight) {
+    public static BufferedImage generateProceduralFrame(int tileWidth, int tileHeight) {
         BufferedImage canvasAtlas = getCanvasAtlas();
         BufferedImage[] bufferedSubImages = getSubImages(canvasAtlas);
         BufferedImage bufferedCanvas = generateBackgroundCanvas(tileWidth, tileHeight, bufferedSubImages);
+        return bufferedCanvas;
     }
 
-    private BufferedImage[] getSubImages(BufferedImage canvasAtlas) {
+    private static BufferedImage[] getSubImages(BufferedImage canvasAtlas) {
         BufferedImage bufferedImages[] = new BufferedImage[SubImageID.MAX.value];
         bufferedImages[SubImageID.TOP_LEFT.value] = canvasAtlas.getSubimage(0, 0, 7, 7);
         bufferedImages[SubImageID.TOP_RIGHT.value] = canvasAtlas.getSubimage(137, 0, 7, 7);
@@ -66,7 +67,7 @@ public class ProceduralFrameGenerator {
         bufferedImages[SubImageID.BACKGROUND.value] = canvasAtlas.getSubimage(8, 8, 128, 128);
         return bufferedImages;
     }
-    private BufferedImage generateBackgroundCanvas(int tileWidth, int tileHeight, BufferedImage[] bufferedAtlasImages) {
+    private static BufferedImage generateBackgroundCanvas(int tileWidth, int tileHeight, BufferedImage[] bufferedAtlasImages) {
         int width = (Utils.PIXELS_IN_MAP * tileWidth) + Utils.OFFSET;
         int height = (Utils.PIXELS_IN_MAP * tileHeight) + Utils.OFFSET;
         BufferedImage resultImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);

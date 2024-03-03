@@ -1,9 +1,11 @@
 package com.jalvaviel.addon.utils;
 
+import meteordevelopment.meteorclient.systems.modules.world.HighwayBuilder;
 import net.fabricmc.loader.api.FabricLoader;
 import org.jetbrains.annotations.NotNull;
 
 import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -63,14 +65,21 @@ public class Utils {
         }
     }
 
-    public static void writeMapToFolder(Map map, String fullPath){
-        writeImageToFolder(map.bufferedMap, fullPath);
-    }
     public static void writeCanvasToFolder(CanvasData canvasData, String fullPath){
         writeImageToFolder(canvasData.bufferedCanvas, fullPath);
     }
 
     public enum Axis{
         X, Y, Z, UNKNOWN;
+    }
+
+
+    public static BufferedImage rotateImage(BufferedImage bufferedImage, int rotation){
+        Graphics2D graphics = bufferedImage.createGraphics();
+        if(rotation % 2 == 0){
+            graphics.rotate(rotation*45); // Assume clockwise
+        }
+        graphics.dispose();
+        return bufferedImage;
     }
 }

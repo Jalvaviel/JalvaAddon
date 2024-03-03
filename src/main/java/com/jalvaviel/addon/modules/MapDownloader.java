@@ -106,9 +106,6 @@ public class MapDownloader extends Module {
 
     @Override
     public void onActivate() {
-        boolean isServer = mc.getCurrentServerEntry() != null;
-        String folderPath = Utils.getFolderPath(isServer, folderString);
-        Utils.createWorldFolder(folderPath);
         if(mapDownloaderMode.get() == MapDownloaderModes.Item_Frames){
             if(pos1 == null || pos2 == null) {
                 ChatUtils.sendMsg("JalvaAddons", Text.of("Please select with your wand the corners of your selection"));
@@ -116,12 +113,18 @@ public class MapDownloader extends Module {
         }
     }
 
-    private void saveMaps(String folderPath){
+    private void saveMaps(){
         Map[][] maps;
         if(mapDownloaderMode.get() == MapDownloaderModes.Item_Frames){
             maps = getMapsFromItemFrames();
             CanvasData canvasData = getCanvasGenerator().generateCanvasFromMapMatrix(maps,CanvasType.CUSTOM);
-            Utils.writeCanvasToFolder(canvasData,folderPath + "\\" + canvasData.canvasID + ".png");
+            if(mapBackground.get()){
+                canvasData = FrameBorderEffect.addFrameToCanvas(canvasData);
+            }
+            boolean isServer = mc.getCurrentServerEntry() != null;
+            String fullpath = Utils.getFolderPath(isServer, folderString);
+            Utils.createWorldFolder(fullpath);
+            Utils.writeCanvasToFolder(canvasData,fullpath + "\\" + canvasData.canvasID + ".png");
         }
     }
 
@@ -148,13 +151,14 @@ public class MapDownloader extends Module {
             int indexArrayHorizontal = (int) (itemFrameHorizontalCoordsWorld - minCoordHorizontal);
             int indexArrayVertical = (int) (itemFrameVerticalCoordsWorld - minCoordVertical);
             if(itemFrameEntity.getHeldItemStack().getItem() instanceof FilledMapItem){
+                itemFrameEntity.getRotation();
                 if(commonDirection == Direction.UP) {
                     commonDirection = itemFrameEntity.getHorizontalFacing();
                 }
                 if (saveMapsAsCanvas.get() && itemFrameEntity.getHorizontalFacing() == commonDirection) {
-                    canvasMatrix[indexArrayHorizontal][indexArrayVertical] = new Map(itemFrameEntity.getHeldItemStack(), itemFrameEntity.getHorizontalFacing());
+                    canvasMatrix[indexArrayHorizontal][indexArrayVertical] = new Map(itemFrameEntity.getHeldItemStack(), itemFrameEntity.getHorizontalFacing(), itemFrameEntity.getRotation());
                 } else if (!saveMapsAsCanvas.get()){
-                    canvasMatrix[indexArrayHorizontal][indexArrayVertical] = new Map(itemFrameEntity.getHeldItemStack(), itemFrameEntity.getHorizontalFacing());
+                    canvasMatrix[indexArrayHorizontal][indexArrayVertical] = new Map(itemFrameEntity.getHeldItemStack(), itemFrameEntity.getHorizontalFacing(), itemFrameEntity.getRotation());
                 }
             }
         }
@@ -227,7 +231,7 @@ public class MapDownloader extends Module {
 
         if(saveMapsKeybind.get().isPressed()){ // Only run once is pressed
             if(!saveMapsKeybindPressed){
-                saveMaps(folderString);
+                saveMaps();
                 ChatUtils.sendMsg("JalvaAddons",Text.of("Saved maps from item frames successfully!"));
                 pos1 = null;
                 pos2 = null;

@@ -18,24 +18,24 @@ public class Map {
     protected int width;
     protected int height;
     public UUID imageID = null;
-    protected int canvasX;
-    protected int canvasY;
     protected Direction mapFacing;
+    protected int rotation = 0;
 
-    public Map(ItemStack mapStack, int width, int height, Direction mapFacing) { // Constructor for arbitrary width and height
+    public Map(ItemStack mapStack, int width, int height, Direction mapFacing, int rotation) { // Constructor for arbitrary width and height
         this.mapStack = mapStack;
         this.width = width;
         this.height = height;
         this.bufferedMap = new BufferedImage(this.width, this.height, BufferedImage.TYPE_INT_ARGB);
         this.mapFacing = mapFacing;
+        this.rotation = rotation;
         generateMap();
     }
 
-    public Map(ItemStack mapStack, Direction mapFacing) {
-        this(mapStack,128,128, mapFacing);
+    public Map(ItemStack mapStack, Direction mapFacing, int rotation) {
+        this(mapStack,128,128, mapFacing, rotation);
     }
     public Map(ItemStack mapStack) {
-        this(mapStack,128,128, Direction.UP);
+        this(mapStack,128,128, Direction.UP,0);
     }
     public Map(boolean isEmptyMap) {
         this.width = 128;
@@ -47,6 +47,7 @@ public class Map {
     public void generateMap(){
         getPixelDataFromMap();
         convertMap();
+        this.bufferedMap = Utils.rotateImage(bufferedMap, rotation);
         generateImageIdentifier();
     }
 

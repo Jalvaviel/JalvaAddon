@@ -14,7 +14,7 @@ import java.util.Optional;
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class FrameBorderEffect {
-    public BufferedImage getFrameImageFromType(CanvasData canvasData){
+    public static BufferedImage getFrameImageFromType(CanvasData canvasData){
         String location = "jalvaaddon:textures/single_bg.png";
         BufferedImage bgImage = null;
         switch(canvasData.canvasType){
@@ -31,8 +31,8 @@ public class FrameBorderEffect {
                 location = "jalvaaddon:textures/dispenser_bg.png";
                 break;
             case CUSTOM:
-                location = "jalvaaddon:textures/custom_bg.png";
-                break;
+                bgImage = ProceduralFrameGenerator.generateProceduralFrame(canvasData.widthInTiles,canvasData.heightInTiles);
+                return bgImage;
             default:
                 break;
         }
@@ -44,13 +44,12 @@ public class FrameBorderEffect {
             bgImage = ImageIO.read(bis);
         }
         catch(IOException e){
-            //super.generateBlankImage(); //TODO use the procedural generator to generate a default one.
-            ProceduralFrameGenerator proceduralFrameGenerator = new ProceduralFrameGenerator(canvasData.widthInTiles,canvasData.heightInTiles);
+            bgImage = ProceduralFrameGenerator.generateProceduralFrame(canvasData.widthInTiles,canvasData.heightInTiles);
         }
         return bgImage;
     }
-    public CanvasData addFrameToCanvas(CanvasData canvasData){
-        BufferedImage resultImage = new BufferedImage(Utils.PIXELS_IN_MAP + Utils.OFFSET, Utils.PIXELS_IN_MAP + Utils.OFFSET, BufferedImage.TYPE_INT_ARGB);
+    public static CanvasData addFrameToCanvas(CanvasData canvasData){
+        BufferedImage resultImage = new BufferedImage(canvasData.widthInTiles * Utils.PIXELS_IN_MAP + Utils.OFFSET, canvasData.heightInTiles * Utils.PIXELS_IN_MAP + Utils.OFFSET, BufferedImage.TYPE_INT_ARGB);
         Graphics2D graphics = resultImage.createGraphics();
         graphics.drawImage(getFrameImageFromType(canvasData), 0, 0, null);
         graphics.drawImage(canvasData.bufferedCanvas, Utils.HALF_OFFSET, Utils.HALF_OFFSET, null);
