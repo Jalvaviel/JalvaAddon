@@ -19,18 +19,18 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
 public class FramedMap extends Map {
     private BufferedImage mapBG;
 
-    public FramedMap(ItemStack mapStack, int width, int height, Direction mapFacing) { //Todo framed Canvas intergration
-        super(mapStack, width, height, mapFacing);
+    public FramedMap(ItemStack mapStack, int width, int height, Direction mapFacing, int rotation) { //Todo framed Canvas intergration
+        super(mapStack, width, height, mapFacing, rotation);
         getMapBG();
         setMapFrame();
     }
 
-    public FramedMap(ItemStack mapStack, Direction mapFacing) {
-        this(mapStack, 128, 128, mapFacing);
+    public FramedMap(ItemStack mapStack, Direction mapFacing, int rotation) {
+        this(mapStack, 128, 128, mapFacing, rotation);
     }
 
     public FramedMap(ItemStack mapStack) {
-        this(mapStack, 128, 128, Direction.UP);
+        this(mapStack, 128, 128, Direction.UP, 0);
     }
 
     private void getMapBG(){

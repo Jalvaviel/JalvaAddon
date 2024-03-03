@@ -156,8 +156,10 @@ public class MapDownloader extends Module {
                     commonDirection = itemFrameEntity.getHorizontalFacing();
                 }
                 if (saveMapsAsCanvas.get() && itemFrameEntity.getHorizontalFacing() == commonDirection) {
+                    ChatUtils.sendMsg(Text.of("Item rotation: "+itemFrameEntity.getRotation()));
                     canvasMatrix[indexArrayHorizontal][indexArrayVertical] = new Map(itemFrameEntity.getHeldItemStack(), itemFrameEntity.getHorizontalFacing(), itemFrameEntity.getRotation());
                 } else if (!saveMapsAsCanvas.get()){
+
                     canvasMatrix[indexArrayHorizontal][indexArrayVertical] = new Map(itemFrameEntity.getHeldItemStack(), itemFrameEntity.getHorizontalFacing(), itemFrameEntity.getRotation());
                 }
             }

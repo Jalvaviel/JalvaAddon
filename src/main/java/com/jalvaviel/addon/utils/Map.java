@@ -47,7 +47,7 @@ public class Map {
     public void generateMap(){
         getPixelDataFromMap();
         convertMap();
-        this.bufferedMap = Utils.rotateImage(bufferedMap, rotation);
+        this.bufferedMap = Utils.rotateImage(bufferedMap, rotation*90);
         generateImageIdentifier();
     }
 
