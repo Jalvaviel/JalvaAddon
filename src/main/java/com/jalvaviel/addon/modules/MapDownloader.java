@@ -157,7 +157,16 @@ public class MapDownloader extends Module {
                 }
                 if (saveMapsAsCanvas.get() && itemFrameEntity.getHorizontalFacing() == commonDirection) {
                     ChatUtils.sendMsg(Text.of("Item rotation: "+itemFrameEntity.getRotation()));
-                    canvasMatrix[indexArrayHorizontal][indexArrayVertical] = new Map(itemFrameEntity.getHeldItemStack(), itemFrameEntity.getHorizontalFacing(), itemFrameEntity.getRotation());
+                    try {
+                        canvasMatrix[indexArrayHorizontal][indexArrayVertical] = new Map(itemFrameEntity.getHeldItemStack(), itemFrameEntity.getHorizontalFacing(), itemFrameEntity.getRotation());
+                    } catch (ArrayIndexOutOfBoundsException e){ // Niggerlicious workaround
+                        LOG.warn("Index array out of bounds! "+
+                            indexArrayHorizontal+" "+
+                            indexArrayVertical+" "+
+                            canvasMatrix.length+" "+
+                            canvasMatrix[0].length);
+                        canvasMatrix[0][indexArrayVertical] = new Map(itemFrameEntity.getHeldItemStack(), itemFrameEntity.getHorizontalFacing(), itemFrameEntity.getRotation());
+                    }
                 } else if (!saveMapsAsCanvas.get()){
 
                     canvasMatrix[indexArrayHorizontal][indexArrayVertical] = new Map(itemFrameEntity.getHeldItemStack(), itemFrameEntity.getHorizontalFacing(), itemFrameEntity.getRotation());
@@ -202,7 +211,7 @@ public class MapDownloader extends Module {
                 event.renderer.boxLines(box3D.minX, box3D.minY, box3D.minZ, box3D.maxX, box3D.maxY, box3D.maxZ, Color.RED, 0);
             }
         } catch (Exception e) {
-            LOG.warn("Couldn't render the block outlines in the map selection");
+            // LOG.warn("Couldn't render the block outlines in the map selection");
         }
     }
 
