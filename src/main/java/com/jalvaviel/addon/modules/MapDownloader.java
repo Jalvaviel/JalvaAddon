@@ -11,14 +11,9 @@ import meteordevelopment.meteorclient.utils.misc.Keybind;
 import meteordevelopment.meteorclient.utils.player.ChatUtils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.orbit.EventHandler;
-import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.block.Block;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.decoration.ItemFrameEntity;
-import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.FilledMapItem;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
 
 import net.minecraft.predicate.entity.EntityPredicates;
 import net.minecraft.text.Text;
@@ -34,7 +29,6 @@ import java.util.*;
 
 import static com.jalvaviel.addon.Addon.LOG;
 import static com.jalvaviel.addon.utils.CanvasGenerator.getCanvasGenerator;
-import static java.lang.Math.abs;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_KP_ADD;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_KP_SUBTRACT;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_KP_ENTER;
@@ -115,16 +109,27 @@ public class MapDownloader extends Module {
 
     private void saveMaps(){
         Map[][] maps;
-        if(mapDownloaderMode.get() == MapDownloaderModes.Item_Frames){
-            maps = getMapsFromItemFrames();
-            CanvasData canvasData = getCanvasGenerator().generateCanvasFromMapMatrix(maps,CanvasType.CUSTOM);
-            if(mapBackground.get()){
-                canvasData = FrameBorderEffect.addFrameToCanvas(canvasData);
-            }
-            boolean isServer = mc.getCurrentServerEntry() != null;
-            String fullpath = Utils.getFolderPath(isServer, folderString);
-            Utils.createWorldFolder(fullpath);
-            Utils.writeCanvasToFolder(canvasData,fullpath + "\\" + canvasData.canvasID + ".png");
+        boolean isServer = mc.getCurrentServerEntry() != null;
+        String fullpath = Utils.getFolderPath(isServer, folderString);
+        Utils.createWorldFolder(fullpath);
+        switch(mapDownloaderMode.get()){
+            case Item_Frames:
+                maps = getMapsFromItemFrames();
+                if(saveMapsAsCanvas.get()) { // Canvas Case
+                    CanvasData canvasData = getCanvasGenerator().generateCanvasFromMapMatrix(maps, CanvasType.CUSTOM);
+                    if (mapBackground.get()) { // Frame Case
+                        canvasData = FrameBorderEffect.addFrameToCanvas(canvasData);
+                    }
+                    Utils.writeCanvasToFolder(canvasData, fullpath + "\\" + canvasData.canvasID + ".png");
+                } else { // Separate Maps Case
+                    for (Map[] map : maps) {
+                        for (int h = 0; h < maps[0].length; h++) {
+                            Utils.writeImageToFolder(map[h].bufferedMap, fullpath + "\\" + map[h].imageID + ".png");
+                        }
+                    }
+                }
+            case Inventories:
+                // maps = getMapsFromInventories(); // TODO
         }
     }
 
@@ -155,11 +160,10 @@ public class MapDownloader extends Module {
                 if(commonDirection == Direction.UP) {
                     commonDirection = itemFrameEntity.getHorizontalFacing();
                 }
-                if (saveMapsAsCanvas.get() && itemFrameEntity.getHorizontalFacing() == commonDirection) {
-                    ChatUtils.sendMsg(Text.of("Item rotation: "+itemFrameEntity.getRotation()));
+                if (itemFrameEntity.getHorizontalFacing() == commonDirection) { // Changed saveMapsAsCanvas.get()
                     try {
                         canvasMatrix[indexArrayHorizontal][indexArrayVertical] = new Map(itemFrameEntity.getHeldItemStack(), itemFrameEntity.getHorizontalFacing(), itemFrameEntity.getRotation());
-                    } catch (ArrayIndexOutOfBoundsException e){ // Niggerlicious workaround
+                    } catch (ArrayIndexOutOfBoundsException e){ // TODO Niggerlicious workaround
                         LOG.warn("Index array out of bounds! "+
                             indexArrayHorizontal+" "+
                             indexArrayVertical+" "+
@@ -167,26 +171,21 @@ public class MapDownloader extends Module {
                             canvasMatrix[0].length);
                         canvasMatrix[0][indexArrayVertical] = new Map(itemFrameEntity.getHeldItemStack(), itemFrameEntity.getHorizontalFacing(), itemFrameEntity.getRotation());
                     }
-                } else if (!saveMapsAsCanvas.get()){
-
-                    canvasMatrix[indexArrayHorizontal][indexArrayVertical] = new Map(itemFrameEntity.getHeldItemStack(), itemFrameEntity.getHorizontalFacing(), itemFrameEntity.getRotation());
                 }
             }
         }
         return canvasMatrix;
     }
 
-    private boolean tryUpdateBox(BlockPos blockPos1, BlockPos blockPos2) {
+    private void tryUpdateBox(BlockPos blockPos1, BlockPos blockPos2) {
         if (blockPos1 != null && blockPos2 != null) {
             CanvasBox canvasBox = new CanvasBox(blockPos1, blockPos2);
             if (canvasBox.isFlat()) {
                 box = canvasBox;
-                return true;
             } else {
                 box = null;
             }
         }
-        return false;
     }
 
     /**
@@ -241,7 +240,7 @@ public class MapDownloader extends Module {
         }
 
         if(saveMapsKeybind.get().isPressed()){ // Only run once is pressed
-            if(!saveMapsKeybindPressed){
+            if(!saveMapsKeybindPressed && pos1 != null && pos2 != null){
                 saveMaps();
                 ChatUtils.sendMsg("JalvaAddons",Text.of("Saved maps from item frames successfully!"));
                 pos1 = null;

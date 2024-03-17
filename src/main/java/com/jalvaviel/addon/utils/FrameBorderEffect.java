@@ -2,6 +2,7 @@ package com.jalvaviel.addon.utils;
 
 import net.minecraft.resource.Resource;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.Direction;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -30,6 +31,9 @@ public class FrameBorderEffect {
             case DISPENSER:
                 location = "jalvaaddon:textures/dispenser_bg.png";
                 break;
+            case SINGLE:
+                location = "jalvaaddon:textures/single_bg.png";
+                break;
             case CUSTOM:
                 bgImage = ProceduralFrameGenerator.generateProceduralFrame(canvasData.widthInTiles,canvasData.heightInTiles);
                 return bgImage;
@@ -48,6 +52,11 @@ public class FrameBorderEffect {
         }
         return bgImage;
     }
+    public static BufferedImage getFrameImageFromType(Map map){
+        CanvasData singleMapCanvas = new CanvasData(map.bufferedMap, map.imageID, CanvasType.SINGLE);
+        return getFrameImageFromType(singleMapCanvas);
+    }
+
     public static CanvasData addFrameToCanvas(CanvasData canvasData){
         BufferedImage resultImage = new BufferedImage(canvasData.widthInTiles * Utils.PIXELS_IN_MAP + Utils.OFFSET, canvasData.heightInTiles * Utils.PIXELS_IN_MAP + Utils.OFFSET, BufferedImage.TYPE_INT_ARGB);
         Graphics2D graphics = resultImage.createGraphics();
@@ -56,5 +65,14 @@ public class FrameBorderEffect {
         graphics.dispose();
         CanvasData framedCanvasData = new CanvasData(resultImage,Utils.generateBufferedImageIdentifier(resultImage),canvasData.canvasType, canvasData.widthInTiles, canvasData.heightInTiles);
         return framedCanvasData;
+    }
+
+    public static Map addFrameToMap(Map map){
+        BufferedImage resultImage = new BufferedImage(Utils.PIXELS_IN_MAP + Utils.OFFSET, Utils.PIXELS_IN_MAP + Utils.OFFSET, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D graphics = resultImage.createGraphics();
+        graphics.drawImage(getFrameImageFromType(map), 0, 0, null);
+        graphics.drawImage(map.bufferedMap, Utils.HALF_OFFSET, Utils.HALF_OFFSET, null);
+        graphics.dispose();
+        Map framedMap = new Map(resultImage, Utils.PIXELS_IN_MAP + Utils.OFFSET, Utils.PIXELS_IN_MAP + Utils.OFFSET, map.mapFacing, map.rotation)
     }
 }
