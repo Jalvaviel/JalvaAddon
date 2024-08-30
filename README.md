@@ -4,25 +4,18 @@ This is an addon for Meteor Client in Minecraft.
 
 ## Included Modules
 
-### Map Downloader
-
-Downloads Minecraft maps as images in .png format with multiple functionalities.
-- Download maps from item frames.
-- Download maps from inventories.
-- Download maps with a map texture frame.
-- Stitch maps together as a canvas, so you can have multiple Map IDs in the same image.
-- Change the map texture frame with a resourcepack.
-
 ### Map Boundaries
 
 Overlays a border for each map region in-game.
 - Customize the color of the border.
 - Make it not render through blocks.
 
-### Mushroom Water
+### Mushroom Biome Colors
 
-Changes the color of the water on Mushroom Biomes, useful for detecting Mushroom Biome borders.
+Changes the color of the water, sky and blocks on Mushroom Biomes, useful for detecting Mushroom Biome borders.
 - Customize the water color.
+- Customize the sky color.
+- Customize the air block color (in dev).
 
 ## Contribute:  
 
