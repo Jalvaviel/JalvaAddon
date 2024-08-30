@@ -4,7 +4,8 @@
   "compatibilityLevel": "JAVA_17",
   "client": [
     "MushroomWaterMixin",
-    "NukerMixin"
+    "MushroomSkyMixin",
+    "AirBlockMixin"
   ],
   "injectors": {
     "defaultRequire": 1

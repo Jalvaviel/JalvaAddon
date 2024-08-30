@@ -1,6 +1,6 @@
 package com.jalvaviel.addon.mixin;
 
-import com.jalvaviel.addon.modules.MushroomWater;
+import com.jalvaviel.addon.modules.MushroomBiomeColors;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import net.minecraft.client.color.world.BiomeColors;
 import net.minecraft.util.math.BlockPos;
@@ -18,7 +18,7 @@ import static net.minecraft.world.biome.BiomeKeys.MUSHROOM_FIELDS;
 public class MushroomWaterMixin {
     @Inject(method = "getWaterColor", at = @At("HEAD"), cancellable = true)
     private static void onGetWaterColor(BlockRenderView world, BlockPos pos, CallbackInfoReturnable<Integer> info) {
-        MushroomWater mushroom_water = Modules.get().get(MushroomWater.class);
+        MushroomBiomeColors mushroom_water = Modules.get().get(MushroomBiomeColors.class);
         if (mushroom_water.isActive()) {
             assert mc.world != null;
             if (mc.world.getBiome(pos).matchesKey(MUSHROOM_FIELDS)) {
@@ -27,3 +27,4 @@ public class MushroomWaterMixin {
         }
     }
 }
+

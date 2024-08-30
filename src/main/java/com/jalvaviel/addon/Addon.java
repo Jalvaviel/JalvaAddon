@@ -19,9 +19,9 @@ public class Addon extends MeteorAddon {
         // Framed canvas atlas generator
 
         // Modules
-        Modules.get().add(new MapDownloader());
+        //Modules.get().add(new MapDownloader());
         Modules.get().add(new MapBoundaries());
-        Modules.get().add(new MushroomWater());
+        Modules.get().add(new MushroomBiomeColors());
 
         // Commands
         //Commands.add(new Pos1());
