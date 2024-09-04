@@ -12,10 +12,7 @@ import meteordevelopment.meteorclient.events.world.BlockUpdateEvent;
 import meteordevelopment.meteorclient.events.world.ChunkDataEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
-import meteordevelopment.meteorclient.settings.BoolSetting;
-import meteordevelopment.meteorclient.settings.ColorSetting;
-import meteordevelopment.meteorclient.settings.Setting;
-import meteordevelopment.meteorclient.settings.SettingGroup;
+import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.movement.AutoWalk;
 import meteordevelopment.meteorclient.systems.modules.render.blockesp.ESPBlock;
 import meteordevelopment.meteorclient.systems.modules.render.blockesp.ESPBlockData;
@@ -94,6 +91,30 @@ public class MushroomBiomeColors extends Module {
         .visible(() -> renderBlocks.get())
         .build()
     );
+    public final Setting<Integer> minY = sgGeneral.add(new IntSetting.Builder()
+        .name("minimum-y")
+        .description("The minimum layer for the biome.")
+        .sliderRange(-64,320)
+        .defaultValue(-64)
+        .build()
+    );
+
+    public final Setting<Integer> maxY = sgGeneral.add(new IntSetting.Builder()
+        .name("maximum-y")
+        .description("The maximum layer for the biome.")
+        .sliderRange(-64,320)
+        .defaultValue(320)
+        .build()
+    );
+
+    public final Setting<Boolean> occlusion = sgGeneral.add(new BoolSetting.Builder()
+        .name("Occlusion")
+        .description("Hide the faces that are covered by blocks")
+        .defaultValue(true)
+        .build()
+    );
+
+
 
     private void reload() {
         if (mc.worldRenderer != null && isActive()) mc.worldRenderer.reload();
