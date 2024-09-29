@@ -16,6 +16,7 @@ import net.minecraft.util.shape.VoxelShapes;
 import net.minecraft.world.biome.Biome;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
+/*
 
 public class ESPBiomeBlock {
     private static final BlockPos.Mutable blockPos = new BlockPos.Mutable();
@@ -148,7 +149,6 @@ public class ESPBiomeBlock {
         return biomeState != biome;//state.getBlock() == mc.world.getBlockState(blockPos).getBlock() || biomeState != biome;
     }
 
-     */
     private boolean isDifferentBiomeForEdge(BlockPos blockPos, Direction direction1, Direction direction2) {
         BlockPos neighbor1 = blockPos.offset(direction1);
         BlockPos neighbor2 = blockPos.offset(direction2);
@@ -289,116 +289,6 @@ public class ESPBiomeBlock {
             }
         }
     }
-        //event.renderer.blockSides(x, y, z, sideColor, 0);
-        //event.renderer.blockLines(x, y, z, lineColor, 0);
-        /*
-        if (shapeMode.lines()) {
-            // Vertical, BA_LE
-            if (isDifferentBiomeForEdge(blockPos, Direction.WEST, Direction.SOUTH) ||
-                isDifferentBiomeForEdge(blockPos, Direction.WEST, Direction.SOUTH, Direction.DOWN)) {
-                event.renderer.line(x1, y1, z1, x1, y2, z1, lineColor);
-            }
-
-            // Vertical, FO_LE
-            if (isDifferentBiomeForEdge(blockPos, Direction.WEST, Direction.NORTH) ||
-                isDifferentBiomeForEdge(blockPos, Direction.WEST, Direction.NORTH, Direction.DOWN)) {
-                event.renderer.line(x1, y1, z2, x1, y2, z2, lineColor);
-            }
-
-            // Vertical, BA_RI
-            if (isDifferentBiomeForEdge(blockPos, Direction.EAST, Direction.SOUTH) ||
-                isDifferentBiomeForEdge(blockPos, Direction.EAST, Direction.SOUTH, Direction.DOWN)) {
-                event.renderer.line(x2, y1, z1, x2, y2, z1, lineColor);
-            }
-
-            // Vertical, FO_RI
-            if (isDifferentBiomeForEdge(blockPos, Direction.EAST, Direction.NORTH) ||
-                isDifferentBiomeForEdge(blockPos, Direction.EAST, Direction.NORTH, Direction.DOWN)) {
-                event.renderer.line(x2, y1, z2, x2, y2, z2, lineColor);
-            }
-
-            // Horizontal bottom, BA_LE - BA_RI
-            if (isDifferentBiomeForEdge(blockPos, Direction.SOUTH, Direction.WEST) ||
-                isDifferentBiomeForEdge(blockPos, Direction.SOUTH, Direction.WEST, Direction.DOWN)) {
-                event.renderer.line(x1, y1, z1, x2, y1, z1, lineColor);
-            }
-
-            // Horizontal bottom, FO_LE - FO_RI
-            if (isDifferentBiomeForEdge(blockPos, Direction.NORTH, Direction.WEST) ||
-                isDifferentBiomeForEdge(blockPos, Direction.NORTH, Direction.WEST, Direction.DOWN)) {
-                event.renderer.line(x1, y1, z2, x2, y1, z2, lineColor);
-            }
-
-            // Horizontal top, BA_LE - BA_RI
-            if (isDifferentBiomeForEdge(blockPos, Direction.SOUTH, Direction.WEST, Direction.UP) ||
-                isDifferentBiomeForEdge(blockPos, Direction.SOUTH, Direction.WEST, Direction.UP)) {
-                event.renderer.line(x1, y2, z1, x2, y2, z1, lineColor);
-            }
-
-            // Horizontal top, FO_LE - FO_RI
-            if (isDifferentBiomeForEdge(blockPos, Direction.NORTH, Direction.WEST, Direction.UP) ||
-                isDifferentBiomeForEdge(blockPos, Direction.NORTH, Direction.WEST, Direction.UP)) {
-                event.renderer.line(x1, y2, z2, x2, y2, z2, lineColor);
-            }
-
-            // Horizontal bottom, BA_LE - FO_LE
-            if (isDifferentBiomeForEdge(blockPos, Direction.WEST, Direction.SOUTH) ||
-                isDifferentBiomeForEdge(blockPos, Direction.WEST, Direction.SOUTH, Direction.DOWN)) {
-                event.renderer.line(x1, y1, z1, x1, y1, z2, lineColor);
-            }
-
-            // Horizontal bottom, BA_RI - FO_RI
-            if (isDifferentBiomeForEdge(blockPos, Direction.EAST, Direction.SOUTH) ||
-                isDifferentBiomeForEdge(blockPos, Direction.EAST, Direction.SOUTH, Direction.DOWN)) {
-                event.renderer.line(x2, y1, z1, x2, y1, z2, lineColor);
-            }
-
-            // Horizontal top, BA_LE - FO_LE
-            if (isDifferentBiomeForEdge(blockPos, Direction.WEST, Direction.UP) ||
-                isDifferentBiomeForEdge(blockPos, Direction.WEST, Direction.UP, Direction.DOWN)) {
-                event.renderer.line(x1, y2, z1, x1, y2, z2, lineColor);
-            }
-
-            // Horizontal top, BA_RI - FO_RI
-            if (isDifferentBiomeForEdge(blockPos, Direction.EAST, Direction.UP) ||
-                isDifferentBiomeForEdge(blockPos, Direction.EAST, Direction.UP, Direction.DOWN)) {
-                event.renderer.line(x2, y2, z1, x2, y2, z2, lineColor);
-            }
-        }
-
-        // Sides
-        if (shapeMode.sides()) {
-            // Bottom
-            if (isDifferentBiomeForSide(blockPos, Direction.DOWN)) {
-                event.renderer.quadHorizontal(x1, y1, z1, x2, z2, sideColor);
-            }
-
-            // Top
-            if (isDifferentBiomeForSide(blockPos, Direction.UP)) {
-                event.renderer.quadHorizontal(x1, y2, z1, x2, z2, sideColor);
-            }
-
-            // Front
-            if (isDifferentBiomeForSide(blockPos, Direction.NORTH)) {
-                event.renderer.quadVertical(x1, y1, z2, x2, y2, z2, sideColor);
-            }
-
-            // Back
-            if (isDifferentBiomeForSide(blockPos, Direction.SOUTH)) {
-                event.renderer.quadVertical(x1, y1, z1, x2, y2, z1, sideColor);
-            }
-
-            // Right
-            if (isDifferentBiomeForSide(blockPos, Direction.EAST)) {
-                event.renderer.quadVertical(x2, y1, z1, x2, y2, z2, sideColor);
-            }
-
-            // Left
-            if (isDifferentBiomeForSide(blockPos, Direction.WEST)) {
-                event.renderer.quadVertical(x1, y1, z1, x1, y2, z2, sideColor);
-            }
-        }
-         */
 
 
     public static long getKey(int x, int y, int z) {
@@ -409,3 +299,4 @@ public class ESPBiomeBlock {
         return getKey(blockPos.getX(), blockPos.getY(), blockPos.getZ());
     }
 }
+*/

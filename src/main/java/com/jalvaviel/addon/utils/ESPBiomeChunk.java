@@ -29,6 +29,7 @@ import static meteordevelopment.meteorclient.MeteorClient.LOG;
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 import static meteordevelopment.meteorclient.utils.Utils.getRenderDistance;
 
+/*
 public class ESPBiomeChunk {
     private final int x, z;
     public Long2ObjectMap<ESPBiomeBlock> blocks;
@@ -153,4 +154,5 @@ public class ESPBiomeChunk {
         return schunk;
     }
 }
+ */
 

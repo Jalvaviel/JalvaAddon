@@ -13,7 +13,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
-import static net.minecraft.world.biome.BiomeKeys.MUSHROOM_FIELDS;
+import static net.minecraft.world.biome.BiomeKeys.*;
 
 @Mixin(ClientWorld.class)
 public class MushroomSkyMixin {
@@ -24,6 +24,11 @@ public class MushroomSkyMixin {
             assert mc.world != null;
             if (mc.world.getBiome(mc.player.getBlockPos()).matchesKey(MUSHROOM_FIELDS)) {
                 info.setReturnValue(mushroom_sky.skyColor.get().getVec3d());
+            } else {
+                if (mc.world.getBiome(mc.player.getBlockPos()).matchesKey(DEEP_OCEAN) || mc.world.getBiome(mc.player.getBlockPos()).matchesKey(DEEP_COLD_OCEAN) ||
+                    mc.world.getBiome(mc.player.getBlockPos()).matchesKey(DEEP_FROZEN_OCEAN) || mc.world.getBiome(mc.player.getBlockPos()).matchesKey(DEEP_LUKEWARM_OCEAN)){
+                    info.setReturnValue(mushroom_sky.deepOceanSkyColor.get().getVec3d());
+                }
             }
         }
     }

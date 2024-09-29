@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
-import static net.minecraft.world.biome.BiomeKeys.MUSHROOM_FIELDS;
+import static net.minecraft.world.biome.BiomeKeys.*;
 
 
 @Mixin(BiomeColors.class)
@@ -23,6 +23,11 @@ public class MushroomWaterMixin {
             assert mc.world != null;
             if (mc.world.getBiome(pos).matchesKey(MUSHROOM_FIELDS)) {
                 info.setReturnValue(mushroom_water.waterColor.get().getPacked());
+            } else {
+                if (mc.world.getBiome(pos).matchesKey(DEEP_OCEAN) || mc.world.getBiome(pos).matchesKey(DEEP_COLD_OCEAN) ||
+                mc.world.getBiome(pos).matchesKey(DEEP_FROZEN_OCEAN) || mc.world.getBiome(pos).matchesKey(DEEP_LUKEWARM_OCEAN)){
+                    info.setReturnValue(mushroom_water.deepOceanWaterColor.get().getPacked());
+                }
             }
         }
     }

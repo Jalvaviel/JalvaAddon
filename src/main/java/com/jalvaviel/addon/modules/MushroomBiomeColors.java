@@ -1,8 +1,8 @@
 package com.jalvaviel.addon.modules;
 
 import com.jalvaviel.addon.Addon;
-import com.jalvaviel.addon.utils.ESPBiomeBlock;
-import com.jalvaviel.addon.utils.ESPBiomeChunk;
+//import com.jalvaviel.addon.utils.ESPBiomeBlock;
+//import com.jalvaviel.addon.utils.ESPBiomeChunk;
 import com.jalvaviel.addon.utils.ESPBiomeGroup;
 import io.netty.util.Attribute;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
@@ -46,12 +46,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
-import static com.jalvaviel.addon.utils.ESPBiomeChunk.searchChunk;
+//import static com.jalvaviel.addon.utils.ESPBiomeChunk.searchChunk;
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class MushroomBiomeColors extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
-    private final Long2ObjectMap<ESPBiomeChunk> chunks = new Long2ObjectOpenHashMap<>();
+    //private final Long2ObjectMap<ESPBiomeChunk> chunks = new Long2ObjectOpenHashMap<>();
     private final BlockPos.Mutable blockPos = new BlockPos.Mutable();
     private Dimension lastDimension;
     //private final List<ESPBiomeGroup> groups = new UnorderedArrayList<>();
@@ -62,10 +62,24 @@ public class MushroomBiomeColors extends Module {
         .onChanged(val -> reload())
         .build()
     );
+    public final Setting<SettingColor> deepOceanWaterColor = sgGeneral.add(new ColorSetting.Builder()
+        .name("deep-water-color")
+        .description("The color of the deep water.")
+        .defaultValue(new SettingColor(0, 200, 200))
+        .onChanged(val -> reload())
+        .build()
+    );
     public final Setting<SettingColor> skyColor = sgGeneral.add(new ColorSetting.Builder()
         .name("sky-color")
         .description("The color of the sky.")
         .defaultValue(new SettingColor(200, 0, 200))
+        .onChanged(val -> reload())
+        .build()
+    );
+    public final Setting<SettingColor> deepOceanSkyColor = sgGeneral.add(new ColorSetting.Builder()
+        .name("deep-ocean-sky-color")
+        .description("The color of the deep ocean sky.")
+        .defaultValue(new SettingColor(0, 200, 200))
         .onChanged(val -> reload())
         .build()
     );
@@ -75,6 +89,7 @@ public class MushroomBiomeColors extends Module {
         .defaultValue(true)
         .build()
     );
+    /*
     public final Setting<SettingColor> outlineColor = sgGeneral.add(new ColorSetting.Builder()
         .name("outline-color")
         .description("The color of the outline.")
@@ -83,6 +98,7 @@ public class MushroomBiomeColors extends Module {
         .visible(() -> renderBlocks.get())
         .build()
     );
+
     public final Setting<SettingColor> sideColor = sgGeneral.add(new ColorSetting.Builder()
         .name("side-color")
         .description("The color of the side.")
@@ -114,16 +130,18 @@ public class MushroomBiomeColors extends Module {
         .build()
     );
 
+     */
 
-
-    private void reload() {
-        if (mc.worldRenderer != null && isActive()) mc.worldRenderer.reload();
-    }
     public MushroomBiomeColors() {
         super(Addon.CATEGORY, "Mushroom Water", "Changes the water color on Mushroom biomes.");
     }
-    //if (bs.getBlock() == Blocks.AIR && biome == BiomeKeys.MUSHROOM_FIELDS) schunk.add(blockPos, false);
 
+
+   private void reload() {
+        if (mc.worldRenderer != null && isActive()) mc.worldRenderer.reload();
+    }
+
+    /*
     public ESPBiomeBlock getBlock(int x, int y, int z) {
         ESPBiomeChunk chunk = chunks.get(ChunkPos.toLong(x >> 4, z >> 4));
         return chunk == null ? null : chunk.get(x, y, z);
@@ -208,6 +226,6 @@ public class MushroomBiomeColors extends Module {
             }
         }
     }
-
+*/
 }
 
