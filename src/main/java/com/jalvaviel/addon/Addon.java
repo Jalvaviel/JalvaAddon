@@ -24,6 +24,7 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new MushroomBiomeColors());
         Modules.get().add(new FastBreaker());
         Modules.get().add(new ElytraBoostPlus());
+        //Modules.get().add(new BiomeColorChanger());
 
         // Commands
         //Commands.add(new Pos1());
