@@ -19,7 +19,7 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
 /** Kudos to Beanbag44 for this code  Enchantments.EFFICIENCY.getRegistryRef()*/
 
 public class BlockUtils {
-    public static float getBlockBreakingSpeed(BlockState block, PlayerEntity player, ItemStack itemStack, Enchantment enchantment) {
+    public static float getBlockBreakingSpeed(BlockState block, PlayerEntity player, ItemStack itemStack, RegistryEntry<Enchantment> enchantment) {
         float f = itemStack.getMiningSpeedMultiplier(block);
         if (f > 1.0F) {
             assert mc.world != null;
@@ -50,7 +50,7 @@ public class BlockUtils {
 
         return f;
     }
-    public static double getBlockBreakingTimeMS(ItemStack itemStack, BlockPos pos, PlayerEntity player, World world, Enchantment enchantment) {
+    public static double getBlockBreakingTimeMS(ItemStack itemStack, BlockPos pos, PlayerEntity player, World world, RegistryEntry<Enchantment> enchantment) {
         BlockState state = world.getBlockState(pos);
         float f = state.getHardness(world, pos);
         float delta;

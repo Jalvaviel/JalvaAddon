@@ -46,7 +46,7 @@ public class FastBreaker extends Module {
 
     private static int packetCounter = 0;
     private static BlockPos miningBlock;
-    Enchantment enchantment;
+    RegistryEntry<Enchantment> enchantment;
 
     private final Setting<Integer> maxDistance = sgGeneral.add(new IntSetting.Builder()
         .name("max-distance")
@@ -78,7 +78,7 @@ public class FastBreaker extends Module {
     private final Setting<Integer> cooldown = sgGeneral.add(new IntSetting.Builder()
         .name("cooldown")
         .description("Block break cooldown in ticks.")
-        .defaultValue(1)
+        .defaultValue(6)
         .min(0)
         .sliderMax(40)
         .build()
@@ -98,7 +98,7 @@ public class FastBreaker extends Module {
     private void onStartBreakingBlock(StartBreakingBlockEvent event) {
         assert mc.player != null;
         assert mc.world != null;
-        enchantment = Enchantments.EFFICIENCY;
+        enchantment = mc.player.getWorld().getRegistryManager().get(RegistryKeys.ENCHANTMENT).getEntry(Enchantments.EFFICIENCY).get();
         HitResult hitResult = lookingAt();
         if (hitResult == null) return;
         BlockPos targetPos = lookingAt().getBlockPos();
