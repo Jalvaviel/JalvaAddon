@@ -1,9 +1,14 @@
 package com.jalvaviel.addon.utils;
 
-import com.jalvaviel.addon.BiomeESP.Biomes.BiomeListSetting;
-import com.jalvaviel.addon.BiomeESP.Biomes.BiomeListSettingScreen;
+import com.jalvaviel.addon.BiomeESP.BiomeData.BiomeDataSetting;
+import com.jalvaviel.addon.BiomeESP.BiomeData.BiomeDataSettingScreen;
+import com.jalvaviel.addon.BiomeESP.BiomeList.BiomeListSetting;
+import com.jalvaviel.addon.BiomeESP.BiomeList.BiomeListSettingScreen;
+import com.jalvaviel.addon.BiomeESP.ESPBiomeData.ESPBiomeData;
+import com.jalvaviel.addon.BiomeESP.ESPBiomeData.ESPBiomeDataScreen;
 import meteordevelopment.meteorclient.gui.GuiTheme;
 import meteordevelopment.meteorclient.gui.renderer.GuiRenderer;
+import meteordevelopment.meteorclient.gui.screens.settings.BlockDataSettingScreen;
 import meteordevelopment.meteorclient.gui.themes.meteor.widgets.WMeteorLabel;
 import meteordevelopment.meteorclient.gui.widgets.containers.WContainer;
 import meteordevelopment.meteorclient.gui.widgets.containers.WHorizontalList;
@@ -19,7 +24,15 @@ import static meteordevelopment.meteorclient.gui.utils.SettingsWidgetFactory.reg
 
 public class JalvaAddonSettingsWidgetFactory{
     public JalvaAddonSettingsWidgetFactory() {
+        registerCustomFactory(BiomeDataSetting.class, (theme) -> (table, setting) -> biomeDataW(table, (BiomeDataSetting) setting, theme));
         registerCustomFactory(BiomeListSetting.class, (theme) -> (table, setting) -> biomeListW(table, (BiomeListSetting) setting, theme));
+    }
+
+    private void biomeDataW(WTable table, BiomeDataSetting setting, GuiTheme theme) {
+        WButton button = table.add(theme.button(GuiRenderer.EDIT)).expandCellX().widget();
+        button.action = () -> mc.setScreen(new BiomeDataSettingScreen(theme, setting));
+
+        reset(table, setting, theme,null);
     }
 
     private void biomeListW(WTable table, BiomeListSetting setting, GuiTheme theme) {

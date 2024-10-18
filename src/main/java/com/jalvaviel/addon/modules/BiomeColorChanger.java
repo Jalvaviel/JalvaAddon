@@ -1,24 +1,18 @@
 package com.jalvaviel.addon.modules;
 
 import com.jalvaviel.addon.Addon;
-import com.jalvaviel.addon.BiomeESP.BiomeType;
-import com.jalvaviel.addon.BiomeESP.Biomes.BiomeListSetting;
+import com.jalvaviel.addon.BiomeESP.BiomeData.BiomeDataSetting;
+import com.jalvaviel.addon.BiomeESP.BiomeList.BiomeListSetting;
+import com.jalvaviel.addon.BiomeESP.ESPBiomeData.ESPBiomeData;
 import com.mojang.logging.LogUtils;
 import meteordevelopment.meteorclient.settings.*;
-import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.systems.modules.Module;
-import meteordevelopment.meteorclient.utils.Utils;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
-import meteordevelopment.meteorclient.utils.world.Dimension;
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.world.biome.Biome;
 
 import java.util.List;
-
-import static meteordevelopment.meteorclient.MeteorClient.mc;
-import static net.minecraft.world.biome.BiomeKeys.DEEP_OCEAN;
+import java.util.Map;
 
 //import static com.jalvaviel.addon.utils.ESPBiomeChunk.searchChunk;
 
@@ -26,9 +20,30 @@ import static net.minecraft.world.biome.BiomeKeys.DEEP_OCEAN;
 public class BiomeColorChanger extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
-    private final Setting<List<Biome>> biomes = sgGeneral.add(new BiomeListSetting.Builder()
+    public final Setting<List<Biome>> biomes = sgGeneral.add(new BiomeListSetting.Builder()
         .name("biomes")
         .description("Biomes to modify their colors.")
+        .build()
+    );
+
+    public final Setting<ESPBiomeData> defaultBiomeConfig = sgGeneral.add(new GenericSetting.Builder<ESPBiomeData>() // TODO Change to true biome defaults
+        .name("default-biome-config")
+        .description("Default biome config.")
+        .defaultValue(
+            new ESPBiomeData(
+                new SettingColor(0, 50, 255, 255),
+                new SettingColor(100, 255, 255, 255),
+                new SettingColor(0, 255, 50, 255),
+                new SettingColor(0, 255, 50, 255)
+            )
+        )
+        .build()
+    );
+
+    public final Setting<Map<Biome, ESPBiomeData>> biomeConfigs = sgGeneral.add(new BiomeDataSetting.Builder<ESPBiomeData>()
+        .name("biome-configs")
+        .description("Config for each biome.")
+        .defaultData(defaultBiomeConfig)
         .build()
     );
 

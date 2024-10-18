@@ -3,8 +3,9 @@
   "package": "com.jalvaviel.addon.mixin",
   "compatibilityLevel": "JAVA_17",
   "client": [
-    "MushroomWaterMixin",
-    "MushroomSkyMixin"
+    "FoliageColorMixin",
+    "SkyColorMixin",
+    "WaterColorMixin"
   ],
   "injectors": {
     "defaultRequire": 1

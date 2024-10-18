@@ -1,11 +1,14 @@
-package com.jalvaviel.addon.BiomeESP.Biomes;
+package com.jalvaviel.addon.BiomeESP.BiomeList;
 import meteordevelopment.meteorclient.settings.IVisible;
 import meteordevelopment.meteorclient.settings.Setting;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtString;
+import net.minecraft.registry.BuiltinRegistries;
+import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.biome.Biome;
 
@@ -69,11 +72,19 @@ public class BiomeListSetting extends Setting<List<Biome>> {
 
     @Override
     protected List<Biome> load(NbtCompound tag) {
-        assert mc.world != null;
+        //assert mc.world != null;
+        Biome biome;
         get().clear();
         NbtList valueTag = tag.getList("value", 8);
         for (NbtElement tagI : valueTag) {
-            Biome biome = mc.world.getRegistryManager().get(RegistryKeys.BIOME).get(Identifier.of(tagI.asString()));
+            if (mc.world == null) {
+                Optional<RegistryEntry.Reference<Biome>> entry = BuiltinRegistries.createWrapperLookup().createRegistryLookup().getOptionalEntry(
+                    RegistryKeys.BIOME, RegistryKey.of(RegistryKeys.BIOME,Identifier.of(tagI.asString()))
+                );
+                biome = entry.orElseThrow().value(); // Reference implements RegistryEntry, this is fine
+            } else {
+                biome = mc.world.getRegistryManager().get(RegistryKeys.BIOME).get(Identifier.of(tagI.asString()));
+            }
             if (filter == null || filter.test(biome)) get().add(biome);
         }
         return get();

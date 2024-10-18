@@ -1,6 +1,4 @@
 package com.jalvaviel.addon;
-import com.jalvaviel.addon.BiomeESP.Biomes.BiomeListSetting;
-import com.jalvaviel.addon.BiomeESP.Biomes.BiomeListSettingScreen;
 import com.jalvaviel.addon.modules.*;
 import com.jalvaviel.addon.utils.JalvaAddonSettingsWidgetFactory;
 import com.mojang.logging.LogUtils;
@@ -9,9 +7,6 @@ import meteordevelopment.meteorclient.systems.hud.HudGroup;
 import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import org.slf4j.Logger;
-
-import static meteordevelopment.meteorclient.MeteorClient.mc;
-import static meteordevelopment.meteorclient.gui.utils.SettingsWidgetFactory.registerCustomFactory;
 
 
 public class Addon extends MeteorAddon {
