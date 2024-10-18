@@ -1,11 +1,17 @@
 package com.jalvaviel.addon;
+import com.jalvaviel.addon.BiomeESP.Biomes.BiomeListSetting;
+import com.jalvaviel.addon.BiomeESP.Biomes.BiomeListSettingScreen;
 import com.jalvaviel.addon.modules.*;
+import com.jalvaviel.addon.utils.JalvaAddonSettingsWidgetFactory;
 import com.mojang.logging.LogUtils;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
 import meteordevelopment.meteorclient.systems.hud.HudGroup;
 import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import org.slf4j.Logger;
+
+import static meteordevelopment.meteorclient.MeteorClient.mc;
+import static meteordevelopment.meteorclient.gui.utils.SettingsWidgetFactory.registerCustomFactory;
 
 
 public class Addon extends MeteorAddon {
@@ -24,11 +30,14 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new MushroomBiomeColors());
         Modules.get().add(new FastBreaker());
         Modules.get().add(new ElytraBoostPlus());
-        //Modules.get().add(new BiomeColorChanger());
+        Modules.get().add(new BiomeColorChanger());
+
+        JalvaAddonSettingsWidgetFactory widgetFactory = new JalvaAddonSettingsWidgetFactory();
 
         // Commands
         //Commands.add(new Pos1());
         //Commands.add(new Pos2());
+        // selectW(table, setting, () -> mc.setScreen(new BlockListSettingScreen(theme, setting)));
 
         // HUD
         //Hud.get().register(HudExample.INFO);

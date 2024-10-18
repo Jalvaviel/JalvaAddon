@@ -23,8 +23,9 @@
   "custom": {
     "meteor-client:color": "225,25,25"
   },
+  "accessWidener": "jalvaaddon.accesswidener",
   "depends": {
-    "java": ">=21",
+    "java": ">=17",
     "minecraft": ">=${mc_version}",
     "meteor-client": "*"
   }
