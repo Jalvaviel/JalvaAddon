@@ -41,6 +41,7 @@ public class BiomeColorChanger extends Module {
         assert mc.world != null;
         LogUtils.getLogger().info(mc.world.getRegistryManager().get(RegistryKeys.BIOME).getIds().toString());
     }
+
     //private final List<ESPBiomeGroup> groups = new UnorderedArrayList<>();
     /*
     public final Setting<SettingColor> waterColor = sgGeneral.add(new ColorSetting.Builder()
