@@ -35,11 +35,22 @@ public class BiomeListSetting extends Setting<List<Biome>> {
     @Override
     protected List<Biome> parseImpl(String str) {
         assert mc.world != null;
+        Biome biome;
         String[] values = str.split(",");
         List<Biome> biomes = new ArrayList<>(values.length);
         try {
             for (String value : values) {
-                Biome biome = parseId(mc.world.getRegistryManager().get(RegistryKeys.BIOME), value);
+                /*
+                if (mc.world == null) {
+                    Optional<RegistryEntry.Reference<Biome>> entry = BuiltinRegistries.createWrapperLookup().createRegistryLookup().getOptionalEntry(
+                        RegistryKeys.BIOME, RegistryKey.of(RegistryKeys.BIOME, Identifier.of(value))
+                    );
+                    biome = entry.orElseThrow().value(); // Reference implements RegistryEntry, this is fine
+                } else {
+                    biome = parseId(mc.world.getRegistryManager().get(RegistryKeys.BIOME), value);
+                }
+                 */
+                biome = parseId(mc.world.getRegistryManager().get(RegistryKeys.BIOME), value);
                 if (biome != null && (filter == null || filter.test(biome))) biomes.add(biome);
             }
         } catch (Exception ignored) {}
@@ -60,18 +71,23 @@ public class BiomeListSetting extends Setting<List<Biome>> {
 
     @Override
     protected NbtCompound save(NbtCompound tag) {
+        return tag;
+        /*
         assert mc.world != null;
         NbtList valueTag = new NbtList();
         for (Biome biome : get()) {
-            valueTag.add(NbtString.of(Objects.requireNonNull(mc.world.getRegistryManager().get(RegistryKeys.BIOME).getId(biome)).toString()));
+            valueTag.add(NbtString.of(Objects.requireNonNull(mc.world.getRegistryManager().get(RegistryKeys.BIOME).getEntry(biome).getIdAsString())));
         }
         tag.put("value", valueTag);
 
         return tag;
+
+         */
     }
 
     @Override
     protected List<Biome> load(NbtCompound tag) {
+        //return null;
         //assert mc.world != null;
         Biome biome;
         get().clear();
@@ -85,6 +101,7 @@ public class BiomeListSetting extends Setting<List<Biome>> {
             } else {
                 biome = mc.world.getRegistryManager().get(RegistryKeys.BIOME).get(Identifier.of(tagI.asString()));
             }
+            //biome = mc.world.getRegistryManager().get(RegistryKeys.BIOME).get(Identifier.of(tagI.asString()));
             if (filter == null || filter.test(biome)) get().add(biome);
         }
         return get();

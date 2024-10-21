@@ -80,7 +80,7 @@ public class ESPBiomeDataScreen extends WindowScreen { // TODO doesn't show
             .defaultValue(new SettingColor(0, 255, 50,255))
             .onModuleActivated(settingColorSetting -> settingColorSetting.set(biomeData.foliageColor))
             .onChanged(settingColor -> {
-                biomeData.foliageColor.set(settingColor);
+                biomeData.grassColor.set(settingColor);
                 changed(biomeData, biome, setting);
             })
             .build()

@@ -8,9 +8,11 @@ import com.mojang.logging.LogUtils;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
+import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.world.biome.Biome;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -19,6 +21,8 @@ import java.util.Map;
 
 public class BiomeColorChanger extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
+
+    public List<RegistryKey<Biome>> vanillaBiomesRegKeys = new ArrayList<RegistryKey<Biome>>();
 
     public final Setting<List<Biome>> biomes = sgGeneral.add(new BiomeListSetting.Builder()
         .name("biomes")

@@ -1,20 +1,27 @@
 package com.jalvaviel.addon.BiomeESP.BiomeData;
 
 import com.jalvaviel.addon.BiomeESP.ESPBiomeData.IBiomeData;
+import meteordevelopment.meteorclient.settings.BlockDataSetting;
+import meteordevelopment.meteorclient.settings.IBlockData;
 import meteordevelopment.meteorclient.settings.IVisible;
 import meteordevelopment.meteorclient.settings.Setting;
 import meteordevelopment.meteorclient.utils.misc.IChangeable;
 import meteordevelopment.meteorclient.utils.misc.ICopyable;
 import meteordevelopment.meteorclient.utils.misc.IGetter;
 import meteordevelopment.meteorclient.utils.misc.ISerializable;
+import net.minecraft.block.Block;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.registry.RegistryKeys;
+import net.minecraft.nbt.NbtList;
+import net.minecraft.nbt.NbtString;
+import net.minecraft.registry.*;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.biome.Biome;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
@@ -45,17 +52,28 @@ public class BiomeDataSetting <T extends ICopyable<T> & ISerializable<T> & IChan
 
     @Override
     protected NbtCompound save(NbtCompound tag) {
-        assert mc.world != null;
+        //assert mc.world != null;
         NbtCompound valueTag = new NbtCompound();
-        for (Biome biome : get().keySet()) {
-            valueTag.put(Objects.requireNonNull(mc.world.getRegistryManager().get(RegistryKeys.BIOME).getId(biome)).toString(),
-                get().get(biome).toTag());
+        if (mc.world == null) { // TODO debug this.
+            for (Biome biome : get().keySet()) {
+                Optional<RegistryEntry.Reference<Biome>> entry = BuiltinRegistries.createWrapperLookup().createRegistryLookup().getOptionalEntry(
+                    RegistryKeys.BIOME, RegistryKey.of(RegistryKeys.BIOME,Identifier.of(biome.toString()))
+                );
+                biome = entry.orElseThrow().value(); // Reference implements RegistryEntry, this is fine
+                valueTag.put(biome.toString(), get().get(biome).toTag());
+            }
+            tag.put("value", valueTag);
+        } else {
+            for (Biome biome : get().keySet()) {
+                valueTag.put(Objects.requireNonNull(mc.world.getRegistryManager().get(RegistryKeys.BIOME).getId(biome)).toString(),
+                    get().get(biome).toTag());
+            }
+            tag.put("value", valueTag);
         }
-        tag.put("value", valueTag);
-
         return tag;
     }
 
+    /*
     @Override
     protected Map<Biome, T> load(NbtCompound tag) {
         assert mc.world != null;
@@ -64,6 +82,29 @@ public class BiomeDataSetting <T extends ICopyable<T> & ISerializable<T> & IChan
         NbtCompound valueTag = tag.getCompound("value");
         for (String key : valueTag.getKeys()) {
             get().put(mc.world.getRegistryManager().get(RegistryKeys.BIOME).get(Identifier.of(key)), defaultData.get().copy().fromTag(valueTag.getCompound(key)));
+        }
+
+        return get();
+    }
+     */
+
+    @Override
+    protected Map<Biome, T> load(NbtCompound tag) {
+        //assert mc.world != null;
+        get().clear();
+        Biome biome;
+        NbtCompound valueTag = tag.getCompound("value");
+        for (String key : valueTag.getKeys()) {
+            get().put(mc.world.getRegistryManager().get(RegistryKeys.BIOME).get(Identifier.of(key)), defaultData.get().copy().fromTag(valueTag.getCompound(key)));
+            if (mc.world == null) {
+                Optional<RegistryEntry.Reference<Biome>> entry = BuiltinRegistries.createWrapperLookup().createRegistryLookup().getOptionalEntry(
+                    RegistryKeys.BIOME, RegistryKey.of(RegistryKeys.BIOME,Identifier.of(key))
+                );
+                biome = entry.orElseThrow().value(); // Reference implements RegistryEntry, this is fine
+                get().put(biome,defaultData.get().copy().fromTag(valueTag.getCompound(key)));
+            } else {
+                get().put(mc.world.getRegistryManager().get(RegistryKeys.BIOME).get(Identifier.of(key)), defaultData.get().copy().fromTag(valueTag.getCompound(key)));
+            }
         }
 
         return get();

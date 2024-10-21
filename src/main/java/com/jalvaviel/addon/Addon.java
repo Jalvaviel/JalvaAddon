@@ -6,7 +6,14 @@ import meteordevelopment.meteorclient.addons.MeteorAddon;
 import meteordevelopment.meteorclient.systems.hud.HudGroup;
 import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.systems.modules.Modules;
+import net.minecraft.registry.*;
+import net.minecraft.world.biome.Biome;
 import org.slf4j.Logger;
+
+import java.util.Optional;
+import java.util.stream.Stream;
+
+import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 
 public class Addon extends MeteorAddon {
@@ -25,9 +32,12 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new MushroomBiomeColors());
         Modules.get().add(new FastBreaker());
         Modules.get().add(new ElytraBoostPlus());
-        Modules.get().add(new BiomeColorChanger());
-
-        JalvaAddonSettingsWidgetFactory widgetFactory = new JalvaAddonSettingsWidgetFactory();
+        //Modules.get().add(new BiomeColorChanger());
+        Optional<RegistryEntryLookup<Biome>> regbiome = BuiltinRegistries.createWrapperLookup().createRegistryLookup().getOptional(RegistryKeys.BIOME);
+        //Stream<RegistryKey<? extends Registry<?>>> registries = BuiltinRegistries.createWrapperLookup().streamAllRegistryKeys();
+        Stream<RegistryEntryLookup<Biome>> regbiome2 = regbiome.stream();
+        LOG.info("AAAAAAAAAA");
+        //JalvaAddonSettingsWidgetFactory widgetFactory = new JalvaAddonSettingsWidgetFactory();
 
         // Commands
         //Commands.add(new Pos1());

@@ -23,11 +23,13 @@ public class SkyColorMixin {
         if (biomeColorChanger.isActive()) {
             assert mc.world != null;
             assert mc.player != null;
-            RegistryEntry<Biome> currentBiome = mc.world.getBiome(mc.player.getBlockPos());
-            if (biomeColorChanger.biomes.get().contains(currentBiome.value())) {
-                info.setReturnValue(biomeColorChanger.biomeConfigs.get().get(currentBiome.value()).skyColor.getVec3d());
-            }
+            try {
+                RegistryEntry<Biome> currentBiome = mc.world.getBiome(mc.player.getBlockPos());
+                if (biomeColorChanger.biomes.get().contains(currentBiome.value())) {
+                    Vec3d returnValue = biomeColorChanger.biomeConfigs.get().get(currentBiome.value()).skyColor.getVec3d();
+                    info.setReturnValue(returnValue);
+                }
+            } catch (Exception ignored) {}
         }
     }
-
 }

@@ -25,10 +25,12 @@ public class WaterColorMixin {
         if (biomeColorChanger.isActive()) {
             assert mc.world != null;
             assert mc.player != null;
-            RegistryEntry<Biome> currentBiome = mc.world.getBiome(pos);
-            if (biomeColorChanger.biomes.get().contains(currentBiome.value())) {
-                info.setReturnValue(biomeColorChanger.biomeConfigs.get().get(currentBiome.value()).waterColor.getPacked());
-            }
+            try {
+                RegistryEntry<Biome> currentBiome = mc.world.getBiome(pos);
+                if (biomeColorChanger.biomes.get().contains(currentBiome.value())) {
+                    info.setReturnValue(biomeColorChanger.biomeConfigs.get().get(currentBiome.value()).waterColor.getPacked());
+                }
+            } catch (Exception ignored) {}
         }
     }
 }
