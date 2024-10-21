@@ -4,6 +4,7 @@ import com.jalvaviel.addon.Addon;
 import com.jalvaviel.addon.BiomeESP.BiomeData.BiomeDataSetting;
 import com.jalvaviel.addon.BiomeESP.BiomeList.BiomeListSetting;
 import com.jalvaviel.addon.BiomeESP.ESPBiomeData.ESPBiomeData;
+import com.jalvaviel.addon.utils.VanillaBiomesRegKeys;
 import com.mojang.logging.LogUtils;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
@@ -21,8 +22,6 @@ import java.util.Map;
 
 public class BiomeColorChanger extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
-
-    public List<RegistryKey<Biome>> vanillaBiomesRegKeys = new ArrayList<RegistryKey<Biome>>();
 
     public final Setting<List<Biome>> biomes = sgGeneral.add(new BiomeListSetting.Builder()
         .name("biomes")
@@ -57,8 +56,7 @@ public class BiomeColorChanger extends Module {
 
     @Override
     public void onActivate() {
-        assert mc.world != null;
-        LogUtils.getLogger().info(mc.world.getRegistryManager().get(RegistryKeys.BIOME).getIds().toString());
+        LogUtils.getLogger().info(VanillaBiomesRegKeys.getInstance().getBiomes().toString());
     }
 
     //private final List<ESPBiomeGroup> groups = new UnorderedArrayList<>();

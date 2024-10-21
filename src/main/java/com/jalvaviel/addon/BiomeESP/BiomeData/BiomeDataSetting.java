@@ -1,6 +1,7 @@
 package com.jalvaviel.addon.BiomeESP.BiomeData;
 
 import com.jalvaviel.addon.BiomeESP.ESPBiomeData.IBiomeData;
+import com.jalvaviel.addon.utils.VanillaBiomesRegKeys;
 import meteordevelopment.meteorclient.settings.BlockDataSetting;
 import meteordevelopment.meteorclient.settings.IBlockData;
 import meteordevelopment.meteorclient.settings.IVisible;
@@ -54,6 +55,19 @@ public class BiomeDataSetting <T extends ICopyable<T> & ISerializable<T> & IChan
     protected NbtCompound save(NbtCompound tag) {
         //assert mc.world != null;
         NbtCompound valueTag = new NbtCompound();
+        for (Biome biome : get().keySet()) {
+            biome.getFoliageColor()
+            valueTag.put(String.valueOf(VanillaBiomesRegKeys.getInstance().getBiomes().get(0).getRegistry()),
+                get().get(biome).toTag());
+
+            /*valueTag.put(Objects.requireNonNull(mc.world.getRegistryManager().get(RegistryKeys.BIOME).getId(biome)).toString(),
+                get().get(biome).toTag());
+             */
+        }
+        tag.put("value", valueTag);
+        return tag;
+}
+        /*
         if (mc.world == null) { // TODO debug this.
             for (Biome biome : get().keySet()) {
                 Optional<RegistryEntry.Reference<Biome>> entry = BuiltinRegistries.createWrapperLookup().createRegistryLookup().getOptionalEntry(
@@ -72,6 +86,8 @@ public class BiomeDataSetting <T extends ICopyable<T> & ISerializable<T> & IChan
         }
         return tag;
     }
+
+         */
 
     /*
     @Override

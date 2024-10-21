@@ -3,51 +3,14 @@ package com.jalvaviel.addon.modules;
 import com.jalvaviel.addon.Addon;
 //import com.jalvaviel.addon.utils.ESPBiomeBlock;
 //import com.jalvaviel.addon.utils.ESPBiomeChunk;
-import com.jalvaviel.addon.utils.ESPBiomeGroup;
-import io.netty.util.Attribute;
-import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
-import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
-import meteordevelopment.meteorclient.events.render.Render3DEvent;
-import meteordevelopment.meteorclient.events.world.BlockUpdateEvent;
-import meteordevelopment.meteorclient.events.world.ChunkDataEvent;
-import meteordevelopment.meteorclient.events.world.TickEvent;
-import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
-import meteordevelopment.meteorclient.systems.modules.movement.AutoWalk;
-import meteordevelopment.meteorclient.systems.modules.render.blockesp.ESPBlock;
-import meteordevelopment.meteorclient.systems.modules.render.blockesp.ESPBlockData;
-import meteordevelopment.meteorclient.systems.modules.render.blockesp.ESPChunk;
-import meteordevelopment.meteorclient.systems.modules.render.blockesp.ESPGroup;
-import meteordevelopment.meteorclient.utils.Utils;
-import meteordevelopment.meteorclient.utils.misc.UnorderedArrayList;
-import meteordevelopment.meteorclient.utils.network.MeteorExecutor;
-import meteordevelopment.meteorclient.utils.player.PlayerUtils;
-import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.world.Dimension;
-import meteordevelopment.orbit.EventHandler;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.world.Heightmap;
-import net.minecraft.world.biome.Biome;
-import net.minecraft.world.biome.BiomeKeys;
-import net.minecraft.world.biome.source.BiomeSource;
-import net.minecraft.world.chunk.Chunk;
-
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
 
 //import static com.jalvaviel.addon.utils.ESPBiomeChunk.searchChunk;
-import static meteordevelopment.meteorclient.MeteorClient.mc;
+
 
 public class MushroomBiomeColors extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
