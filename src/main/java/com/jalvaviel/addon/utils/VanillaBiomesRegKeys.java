@@ -1,17 +1,19 @@
 package com.jalvaviel.addon.utils;
 
 import net.minecraft.registry.RegistryKey;
+import net.minecraft.util.Identifier;
 import net.minecraft.world.biome.Biome;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class VanillaBiomesRegKeys {
     // The singleton instance
     private static VanillaBiomesRegKeys instance;
 
     // List to hold the registry keys
-    private final List<RegistryKey<Biome>> biomes;
+    private final List<String> biomes;
 
     // Private constructor to prevent instantiation
     private VanillaBiomesRegKeys() {
@@ -27,12 +29,18 @@ public class VanillaBiomesRegKeys {
     }
 
     // Method to add a biome registry key
-    public void add(RegistryKey<Biome> biomeKey) {
-        biomes.add(biomeKey);
+    public void add(String biome) {
+        biomes.add(biome);
     }
 
     // Method to get all registered biome keys
-    public List<RegistryKey<Biome>> getBiomes() {
+    public List<String> getBiomes() {
         return new ArrayList<>(biomes); // Return a copy to prevent modification
+    }
+
+    public Iterable<Identifier> getBiomeIds() {
+        return biomes.stream()
+            .map(Identifier::of) // Map each string to an Identifier
+            .collect(Collectors.toList());
     }
 }

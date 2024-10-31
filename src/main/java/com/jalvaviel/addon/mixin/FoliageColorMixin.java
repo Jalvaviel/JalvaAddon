@@ -25,8 +25,8 @@ public class FoliageColorMixin {
             assert mc.player != null;
             try {
                 RegistryEntry<Biome> currentBiome = mc.world.getBiome(pos);
-                if (biomeColorChanger.biomes.get().contains(currentBiome.value())) {
-                    info.setReturnValue(biomeColorChanger.biomeConfigs.get().get(currentBiome.value()).foliageColor.getPacked());
+                if (biomeColorChanger.biomes.get().contains(currentBiome.getIdAsString())) {
+                    info.setReturnValue(biomeColorChanger.biomeConfigs.get().get(currentBiome.getIdAsString()).foliageColor.getPacked());
                 }
             } catch (Exception ignored) {}
         }

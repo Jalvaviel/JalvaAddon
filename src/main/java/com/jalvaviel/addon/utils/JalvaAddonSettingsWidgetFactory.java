@@ -24,8 +24,8 @@ import static meteordevelopment.meteorclient.gui.utils.SettingsWidgetFactory.reg
 
 public class JalvaAddonSettingsWidgetFactory{
     public JalvaAddonSettingsWidgetFactory() {
-        registerCustomFactory(BiomeDataSetting.class, (theme) -> (table, setting) -> biomeDataW(table, (BiomeDataSetting) setting, theme));
         registerCustomFactory(BiomeListSetting.class, (theme) -> (table, setting) -> biomeListW(table, (BiomeListSetting) setting, theme));
+        registerCustomFactory(BiomeDataSetting.class, (theme) -> (table, setting) -> biomeDataW(table, (BiomeDataSetting) setting, theme));
     }
 
     private void biomeDataW(WTable table, BiomeDataSetting setting, GuiTheme theme) {

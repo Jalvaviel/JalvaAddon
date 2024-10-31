@@ -22,10 +22,10 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class ESPBiomeDataScreen extends WindowScreen { // TODO doesn't show
     private final ESPBiomeData biomeData;
-    private final Biome biome;
+    private final String biome;
     private final BiomeDataSetting<ESPBiomeData> setting;
 
-    public ESPBiomeDataScreen(GuiTheme theme, ESPBiomeData biomeData, Biome biome, BiomeDataSetting<ESPBiomeData> setting) {
+    public ESPBiomeDataScreen(GuiTheme theme, ESPBiomeData biomeData, String biome, BiomeDataSetting<ESPBiomeData> setting) {
         super(theme, "Configure Biome");
 
         this.biomeData = biomeData;
@@ -78,7 +78,7 @@ public class ESPBiomeDataScreen extends WindowScreen { // TODO doesn't show
             .name("grass-color")
             .description("Color of the grass.")
             .defaultValue(new SettingColor(0, 255, 50,255))
-            .onModuleActivated(settingColorSetting -> settingColorSetting.set(biomeData.foliageColor))
+            .onModuleActivated(settingColorSetting -> settingColorSetting.set(biomeData.grassColor))
             .onChanged(settingColor -> {
                 biomeData.grassColor.set(settingColor);
                 changed(biomeData, biome, setting);
@@ -90,7 +90,7 @@ public class ESPBiomeDataScreen extends WindowScreen { // TODO doesn't show
         add(theme.settings(settings)).expandX();
     }
 
-    private void changed(ESPBiomeData biomeData, Biome biome, BiomeDataSetting<ESPBiomeData> setting) {
+    private void changed(ESPBiomeData biomeData, String biome, BiomeDataSetting<ESPBiomeData> setting) {
         if (!biomeData.isChanged() && biome != null && setting != null) {
             setting.get().put(biome, biomeData);
             setting.onChanged();

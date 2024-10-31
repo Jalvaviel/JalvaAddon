@@ -6,14 +6,7 @@ import meteordevelopment.meteorclient.addons.MeteorAddon;
 import meteordevelopment.meteorclient.systems.hud.HudGroup;
 import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.systems.modules.Modules;
-import net.minecraft.registry.*;
-import net.minecraft.world.biome.Biome;
 import org.slf4j.Logger;
-
-import java.util.Optional;
-import java.util.stream.Stream;
-
-import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 
 public class Addon extends MeteorAddon {
@@ -37,7 +30,7 @@ public class Addon extends MeteorAddon {
         //Stream<RegistryKey<? extends Registry<?>>> registries = BuiltinRegistries.createWrapperLookup().streamAllRegistryKeys();
         //Stream<RegistryEntryLookup<Biome>> regbiome2 = regbiome.stream();
         LOG.info("AAAAAAAAAA");
-        //JalvaAddonSettingsWidgetFactory widgetFactory = new JalvaAddonSettingsWidgetFactory();
+        JalvaAddonSettingsWidgetFactory widgetFactory = new JalvaAddonSettingsWidgetFactory();
 
         // Commands
         //Commands.add(new Pos1());

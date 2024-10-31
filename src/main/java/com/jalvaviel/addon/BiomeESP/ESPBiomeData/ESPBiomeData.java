@@ -27,7 +27,7 @@ public class ESPBiomeData implements ICopyable<ESPBiomeData>, ISerializable<ESPB
     }
 
     @Override
-    public WidgetScreen createScreen(GuiTheme theme, Biome biome, BiomeDataSetting<ESPBiomeData> setting) {
+    public WidgetScreen createScreen(GuiTheme theme, String biome, BiomeDataSetting<ESPBiomeData> setting) {
         return new ESPBiomeDataScreen(theme, this, biome, setting);
     }
 
@@ -57,7 +57,7 @@ public class ESPBiomeData implements ICopyable<ESPBiomeData>, ISerializable<ESPB
         waterColor.set(value.waterColor);
         skyColor.set(value.skyColor);
         foliageColor.set(value.foliageColor);
-        grassColor.set(value.foliageColor);
+        grassColor.set(value.grassColor);
 
         changed = value.changed;
 
@@ -88,7 +88,7 @@ public class ESPBiomeData implements ICopyable<ESPBiomeData>, ISerializable<ESPB
         waterColor.fromTag(tag.getCompound("lineColor"));
         skyColor.fromTag(tag.getCompound("sideColor"));
         foliageColor.fromTag(tag.getCompound("sideColor"));
-        foliageColor.fromTag(tag.getCompound("grassColor"));
+        grassColor.fromTag(tag.getCompound("grassColor"));
 
         changed = tag.getBoolean("changed");
 

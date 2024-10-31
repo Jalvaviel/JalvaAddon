@@ -1,5 +1,6 @@
 package com.jalvaviel.addon.mixin;
 
+import com.jalvaviel.addon.BiomeESP.ESPBiomeData.ESPBiomeData;
 import com.jalvaviel.addon.modules.BiomeColorChanger;
 import com.jalvaviel.addon.modules.MushroomBiomeColors;
 import meteordevelopment.meteorclient.systems.modules.Modules;
@@ -12,11 +13,15 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.Map;
+
+import static meteordevelopment.meteorclient.MeteorClient.LOG;
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 import static net.minecraft.world.biome.BiomeKeys.*;
 
 @Mixin(ClientWorld.class)
 public class SkyColorMixin {
+
     @Inject(method = "getSkyColor", at = @At("HEAD"), cancellable = true)
     private void onGetSkyColor(Vec3d cameraPos, float tickDelta, CallbackInfoReturnable<Vec3d> info) {
         BiomeColorChanger biomeColorChanger = Modules.get().get(BiomeColorChanger.class);
@@ -25,8 +30,8 @@ public class SkyColorMixin {
             assert mc.player != null;
             try {
                 RegistryEntry<Biome> currentBiome = mc.world.getBiome(mc.player.getBlockPos());
-                if (biomeColorChanger.biomes.get().contains(currentBiome.value())) {
-                    Vec3d returnValue = biomeColorChanger.biomeConfigs.get().get(currentBiome.value()).skyColor.getVec3d();
+                if (biomeColorChanger.biomes.get().contains(currentBiome.getIdAsString())) {
+                    Vec3d returnValue = biomeColorChanger.biomeConfigs.get().get(currentBiome.getIdAsString()).skyColor.getVec3d();
                     info.setReturnValue(returnValue);
                 }
             } catch (Exception ignored) {}

@@ -1,6 +1,7 @@
 package com.jalvaviel.addon.BiomeESP.BiomeData;
 
 import com.jalvaviel.addon.BiomeESP.ESPBiomeData.IBiomeData;
+import com.jalvaviel.addon.utils.VanillaBiomesRegKeys;
 import meteordevelopment.meteorclient.gui.GuiTheme;
 import meteordevelopment.meteorclient.gui.WindowScreen;
 import meteordevelopment.meteorclient.gui.renderer.GuiRenderer;
@@ -28,10 +29,9 @@ import java.util.Optional;
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class BiomeDataSettingScreen extends WindowScreen {
-    private static final List<Biome> BIOMES = new ArrayList<>(100);
 
     private final BiomeDataSetting<?> setting;
-
+    List<String> BIOMES = new ArrayList<>(50);
     private WTable table;
     private String filterText = "";
 
@@ -58,64 +58,41 @@ public class BiomeDataSettingScreen extends WindowScreen {
     }
 
     public <T extends ICopyable<T> & ISerializable<T> & IChangeable & IBiomeData<T>> void initTable() {
-        //assert mc.world != null;
-        if (mc.world == null) {
-            Optional<RegistryEntryLookup<Biome>> regbiome = BuiltinRegistries.createWrapperLookup().createRegistryLookup().getOptional(RegistryKeys.BIOME);
-            regbiome.ifPresent(biomeLookup -> {
-                // Iterate through all biomes in the registry
-                /*for (RegistryEntry<Biome> entry : biomeLookup.ge.listEntries()) {
-                    Biome biome = entry.value(); // Get the actual Biome object
+        for (String biome : VanillaBiomesRegKeys.getInstance().getBiomes()) {
+            T blockData = (T) setting.get().get(biome);
 
-                    // Process the biome as needed
-                    T biomeData = (T) setting.get().get(biome);
-
-                    if (biomeData != null && biomeData.isChanged()) {
-                        BIOMES.addFirst(biome);
-                    } else {
-                        BIOMES.add(biome);
-                    }
-                }
-                 */
-            });
-        } else {
-            for (Biome biome : Objects.requireNonNull(mc.world.getRegistryManager().get(RegistryKeys.BIOME))) {
-                T biomeData = (T) setting.get().get(biome);
-
-                if (biomeData != null && biomeData.isChanged()) BIOMES.addFirst(biome);
-                else BIOMES.add(biome);
-            }
-
-            for (Biome biome : BIOMES) {
-                String name = Objects.requireNonNull(mc.world.getRegistryManager().get(RegistryKeys.BIOME).getId(biome)).toString();
-                if (!StringUtils.containsIgnoreCase(name, filterText)) continue;
-
-                T biomeData = (T) setting.get().get(biome);
-                table.add(theme.label(Objects.requireNonNull(mc.world.getRegistryManager().get(RegistryKeys.BIOME).getId(biome)).toString())).expandCellX();
-                table.add(theme.label((biomeData != null && biomeData.isChanged()) ? "*" : " "));
-
-                WButton edit = table.add(theme.button(GuiRenderer.EDIT)).widget();
-                edit.action = () -> {
-                    T data = biomeData;
-                    if (data == null) data = (T) setting.defaultData.get().copy();
-
-                    mc.setScreen(data.createScreen(theme, biome, (BiomeDataSetting<T>) setting));
-                };
-
-                WButton reset = table.add(theme.button(GuiRenderer.RESET)).widget();
-                reset.action = () -> {
-                    setting.get().remove(biome);
-                    setting.onChanged();
-
-                    if (biomeData != null && biomeData.isChanged()) {
-                        table.clear();
-                        initTable();
-                    }
-                };
-
-                table.row();
-            }
-
-            BIOMES.clear();
+            if (blockData != null && blockData.isChanged()) BIOMES.addFirst(biome);
+            else BIOMES.add(biome);
         }
+
+        for (String biome : BIOMES) {
+            if (!StringUtils.containsIgnoreCase(biome, filterText)) continue;
+
+            T biomeData = (T) setting.get().get(biome);
+            table.add(theme.label(biome)).expandCellX();
+            table.add(theme.label((biomeData != null && biomeData.isChanged()) ? "*" : " "));
+
+            WButton edit = table.add(theme.button(GuiRenderer.EDIT)).widget();
+            edit.action = () -> {
+                T data = biomeData;
+                if (data == null) data = (T) setting.defaultData.get().copy();
+                mc.setScreen(data.createScreen(theme, biome, (BiomeDataSetting<T>) setting));
+            };
+
+            WButton reset = table.add(theme.button(GuiRenderer.RESET)).widget();
+            reset.action = () -> {
+                setting.get().remove(biome);
+                setting.onChanged();
+
+                if (biomeData != null && biomeData.isChanged()) {
+                    table.clear();
+                    initTable();
+                }
+            };
+
+            table.row();
+        }
+
+        BIOMES.clear();
     }
 }

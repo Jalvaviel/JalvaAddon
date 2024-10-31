@@ -27,8 +27,8 @@ public class WaterColorMixin {
             assert mc.player != null;
             try {
                 RegistryEntry<Biome> currentBiome = mc.world.getBiome(pos);
-                if (biomeColorChanger.biomes.get().contains(currentBiome.value())) {
-                    info.setReturnValue(biomeColorChanger.biomeConfigs.get().get(currentBiome.value()).waterColor.getPacked());
+                if (biomeColorChanger.biomes.get().contains(currentBiome.getIdAsString())) {
+                    info.setReturnValue(biomeColorChanger.biomeConfigs.get().get(currentBiome.getIdAsString()).waterColor.getPacked());
                 }
             } catch (Exception ignored) {}
         }

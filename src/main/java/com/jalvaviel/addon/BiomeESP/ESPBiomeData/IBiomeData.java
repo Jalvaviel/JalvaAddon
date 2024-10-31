@@ -6,8 +6,9 @@ import meteordevelopment.meteorclient.gui.WidgetScreen;
 import meteordevelopment.meteorclient.utils.misc.IChangeable;
 import meteordevelopment.meteorclient.utils.misc.ICopyable;
 import meteordevelopment.meteorclient.utils.misc.ISerializable;
+import net.minecraft.registry.RegistryKey;
 import net.minecraft.world.biome.Biome;
 
 public interface IBiomeData<T extends ICopyable<T> & ISerializable<T> & IChangeable & IBiomeData<T>> {
-    WidgetScreen createScreen(GuiTheme theme, Biome biome, BiomeDataSetting<T> setting);
+    WidgetScreen createScreen(GuiTheme theme, String biome, BiomeDataSetting<T> setting);
 }

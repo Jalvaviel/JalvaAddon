@@ -21,6 +21,6 @@ public class BiomeKeysMixin {
     @Inject(method = "register", at = @At("HEAD"))
     private static void register(String name, CallbackInfoReturnable<RegistryKey<Biome>> cir) {
         VanillaBiomesRegKeys vanillaBiomesRegKeys = VanillaBiomesRegKeys.getInstance();
-        vanillaBiomesRegKeys.add(RegistryKey.of(RegistryKeys.BIOME, Identifier.ofVanilla(name)));
+        vanillaBiomesRegKeys.add(RegistryKey.of(RegistryKeys.BIOME, Identifier.ofVanilla(name)).getValue().toString());
     }
 }

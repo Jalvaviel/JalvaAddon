@@ -17,16 +17,16 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 @Mixin(BiomeColors.class)
 public class GrassColorMixin {
-    @Inject(method = "getFoliageColor", at = @At("HEAD"), cancellable = true)
-    private static void onGetFoliageColor(BlockRenderView world, BlockPos pos, CallbackInfoReturnable<Integer> info) {
+    @Inject(method = "getGrassColor", at = @At("HEAD"), cancellable = true)
+    private static void onGetGrassColor(BlockRenderView world, BlockPos pos, CallbackInfoReturnable<Integer> info) {
         BiomeColorChanger biomeColorChanger = Modules.get().get(BiomeColorChanger.class);
         if (biomeColorChanger.isActive()) {
             assert mc.world != null;
             assert mc.player != null;
             try {
                 RegistryEntry<Biome> currentBiome = mc.world.getBiome(pos);
-                if (biomeColorChanger.biomes.get().contains(currentBiome.value())) {
-                    info.setReturnValue(biomeColorChanger.biomeConfigs.get().get(currentBiome.value()).grassColor.getPacked());
+                if (biomeColorChanger.biomes.get().contains(currentBiome.getIdAsString())) {
+                    info.setReturnValue(biomeColorChanger.biomeConfigs.get().get(currentBiome.getIdAsString()).grassColor.getPacked());
                 }
             } catch (Exception ignored) {}
         }

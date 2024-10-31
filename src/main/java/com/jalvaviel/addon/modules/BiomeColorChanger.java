@@ -1,6 +1,9 @@
 package com.jalvaviel.addon.modules;
 
 import com.jalvaviel.addon.Addon;
+//import com.jalvaviel.addon.BiomeESP.BiomeData.BiomeDataSetting;
+//import com.jalvaviel.addon.BiomeESP.BiomeList.BiomeListSetting;
+//import com.jalvaviel.addon.BiomeESP.ESPBiomeData.ESPBiomeData;
 import com.jalvaviel.addon.BiomeESP.BiomeData.BiomeDataSetting;
 import com.jalvaviel.addon.BiomeESP.BiomeList.BiomeListSetting;
 import com.jalvaviel.addon.BiomeESP.ESPBiomeData.ESPBiomeData;
@@ -9,10 +12,11 @@ import com.mojang.logging.LogUtils;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.world.biome.Biome;
-
+import static meteordevelopment.meteorclient.MeteorClient.LOG;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -23,7 +27,7 @@ import java.util.Map;
 public class BiomeColorChanger extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
-    public final Setting<List<Biome>> biomes = sgGeneral.add(new BiomeListSetting.Builder()
+    public final Setting<List<String>> biomes = sgGeneral.add(new BiomeListSetting.Builder()
         .name("biomes")
         .description("Biomes to modify their colors.")
         .build()
@@ -37,13 +41,13 @@ public class BiomeColorChanger extends Module {
                 new SettingColor(0, 50, 255, 255),
                 new SettingColor(100, 255, 255, 255),
                 new SettingColor(0, 255, 50, 255),
-                new SettingColor(0, 255, 50, 255)
+                new SettingColor(0, 255, 100, 255)
             )
         )
         .build()
     );
 
-    public final Setting<Map<Biome, ESPBiomeData>> biomeConfigs = sgGeneral.add(new BiomeDataSetting.Builder<ESPBiomeData>()
+    public final Setting<Map<String, ESPBiomeData>> biomeConfigs = sgGeneral.add(new BiomeDataSetting.Builder<ESPBiomeData>()
         .name("biome-configs")
         .description("Config for each biome.")
         .defaultData(defaultBiomeConfig)
@@ -56,7 +60,15 @@ public class BiomeColorChanger extends Module {
 
     @Override
     public void onActivate() {
-        LogUtils.getLogger().info(VanillaBiomesRegKeys.getInstance().getBiomes().toString());
+        if(mc.world != null){
+            mc.worldRenderer.reload(); //gameRenderer.getBlockRenderer().clearStateTextures();
+        }
+    }
+    @Override
+    public void onDeactivate() {
+        if(mc.world != null){
+            mc.worldRenderer.reload(); //gameRenderer.getBlockRenderer().clearStateTextures();
+        }
     }
 
     //private final List<ESPBiomeGroup> groups = new UnorderedArrayList<>();
