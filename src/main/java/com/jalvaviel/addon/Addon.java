@@ -1,12 +1,30 @@
 package com.jalvaviel.addon;
+import com.jalvaviel.addon.BiomeESP.BiomeData.BiomeDataSetting;
+import com.jalvaviel.addon.BiomeESP.BiomeData.BiomeDataSettingScreen;
+import com.jalvaviel.addon.BiomeESP.BiomeList.BiomeListSetting;
+import com.jalvaviel.addon.BiomeESP.BiomeList.BiomeListSettingScreen;
 import com.jalvaviel.addon.modules.*;
-import com.jalvaviel.addon.utils.JalvaAddonSettingsWidgetFactory;
 import com.mojang.logging.LogUtils;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
+import meteordevelopment.meteorclient.gui.renderer.GuiRenderer;
+import meteordevelopment.meteorclient.gui.widgets.pressable.WButton;
 import meteordevelopment.meteorclient.systems.hud.HudGroup;
 import meteordevelopment.meteorclient.systems.modules.Category;
 import meteordevelopment.meteorclient.systems.modules.Modules;
+import net.minecraft.registry.RegistryKey;
+import net.minecraft.world.biome.Biome;
+import net.minecraft.world.biome.BiomeKeys;
 import org.slf4j.Logger;
+import meteordevelopment.meteorclient.gui.utils.SettingsWidgetFactory;
+
+import java.lang.reflect.AccessFlag;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 
 public class Addon extends MeteorAddon {
@@ -14,10 +32,26 @@ public class Addon extends MeteorAddon {
     public static final String MOD_ID = "jalva-addon";
     public static final Category CATEGORY = new Category("Jalva Addons");
     public static final HudGroup HUD_GROUP = new HudGroup("Jalva Addons");
-
     @Override
     public void onInitialize() {
-        // Framed canvas atlas generator
+        SettingsWidgetFactory.registerCustomFactory(BiomeListSetting.class, (theme) -> (table, setting) -> {
+            WButton button = table.add(theme.button("Select")).expandCellX().widget();
+            button.action = () -> mc.setScreen(new BiomeListSettingScreen(theme, (BiomeListSetting) setting));
+            WButton reset = table.add(theme.button(GuiRenderer.RESET)).widget();
+            reset.action = () -> {
+                setting.reset();
+            };
+        });
+        SettingsWidgetFactory.registerCustomFactory(BiomeDataSetting.class, (theme) -> (table, setting) -> {
+            WButton button = table.add(theme.button(GuiRenderer.EDIT)).expandCellX().widget();
+            button.action = () -> mc.setScreen(new BiomeDataSettingScreen(theme, (BiomeDataSetting<?>) setting));
+            WButton reset = table.add(theme.button(GuiRenderer.RESET)).widget();
+            reset.action = () -> {
+                setting.reset();
+            };
+        });
+
+
 
         // Modules
         //Modules.get().add(new MapDownloader());
@@ -29,8 +63,7 @@ public class Addon extends MeteorAddon {
         //Optional<RegistryEntryLookup<Biome>> regbiome = BuiltinRegistries.createWrapperLookup().createRegistryLookup().getOptional(RegistryKeys.BIOME);
         //Stream<RegistryKey<? extends Registry<?>>> registries = BuiltinRegistries.createWrapperLookup().streamAllRegistryKeys();
         //Stream<RegistryEntryLookup<Biome>> regbiome2 = regbiome.stream();
-        LOG.info("AAAAAAAAAA");
-        JalvaAddonSettingsWidgetFactory widgetFactory = new JalvaAddonSettingsWidgetFactory();
+        //JalvaAddonSettingsWidgetFactory widgetFactory = new JalvaAddonSettingsWidgetFactory();
 
         // Commands
         //Commands.add(new Pos1());

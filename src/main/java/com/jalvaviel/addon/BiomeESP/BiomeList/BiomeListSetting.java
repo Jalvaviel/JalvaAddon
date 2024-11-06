@@ -1,30 +1,28 @@
 package com.jalvaviel.addon.BiomeESP.BiomeList;
-import com.jalvaviel.addon.modules.BiomeColorChanger;
-import com.jalvaviel.addon.utils.VanillaBiomesRegKeys;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import meteordevelopment.meteorclient.settings.IVisible;
 import meteordevelopment.meteorclient.settings.Setting;
-import meteordevelopment.meteorclient.systems.modules.Modules;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtString;
-import net.minecraft.registry.BuiltinRegistries;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.registry.*;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.biome.Biome;
+import net.minecraft.world.biome.BiomeKeys;
 
+import java.lang.reflect.AccessFlag;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
-public class BiomeListSetting extends Setting<List<String>> {
-    public final Predicate<String> filter;
+public class BiomeListSetting extends Setting<Set<RegistryKey<Biome>>> {
+    public final Predicate<RegistryKey<Biome>> filter;
 
-    public BiomeListSetting(String name, String description, List<String> defaultValue, Consumer<List<String>> onChanged, Consumer<Setting<List<String>>> onModuleActivated, IVisible visible, Predicate<String> filter) {
+    public BiomeListSetting(String name, String description, Set<RegistryKey<Biome>> defaultValue, Consumer<Set<RegistryKey<Biome>>> onChanged, Consumer<Setting<Set<RegistryKey<Biome>>>> onModuleActivated, IVisible visible, Predicate<RegistryKey<Biome>> filter) {
         super(name, description, defaultValue, onChanged, onModuleActivated, visible);
 
         this.filter = filter;
@@ -32,40 +30,44 @@ public class BiomeListSetting extends Setting<List<String>> {
 
     @Override
     public void resetImpl() {
-        value = new ArrayList<>(defaultValue);
+        value = new ObjectOpenHashSet<>(defaultValue);
     }
 
     @Override
-    protected List<String> parseImpl(String str) {
-        assert mc.world != null;
-        String biome;
+    protected Set<RegistryKey<Biome>> parseImpl(String str) {
         String[] values = str.split(",");
-        List<String> biomes = new ArrayList<>(values.length);
-        try {
-            for (String value : values) {
-                if (value != null && (filter == null || filter.test(value))) biomes.add(value);
-            }
-        } catch (Exception ignored) {}
+        Set<RegistryKey<Biome>> biomes = new ObjectOpenHashSet<>(values.length);
+
+        for (String value : values) {
+            String name = value.trim();
+
+            Identifier id;
+            if (name.contains(":")) id = Identifier.of(name);
+            else id = Identifier.ofVanilla(name);
+
+            biomes.add(RegistryKey.of(RegistryKeys.BIOME, id));
+        }
 
         return biomes;
     }
 
     @Override
-    protected boolean isValueValid(List<String> value) {
+    protected boolean isValueValid(Set<RegistryKey<Biome>> value) {
         return true;
     }
 
     @Override
     public Iterable<Identifier> getIdentifierSuggestions() {
-        return VanillaBiomesRegKeys.getInstance().getBiomeIds();
+        return Optional.ofNullable(mc.getNetworkHandler())
+            .flatMap(networkHandler -> networkHandler.getRegistryManager().getOptional(RegistryKeys.BIOME))
+            .map(Registry::getIds).orElse(Set.of());
     }
 
     @Override
-    protected NbtCompound save(NbtCompound tag) {
-        //assert mc.world != null;
+    public NbtCompound save(NbtCompound tag) {
         NbtList valueTag = new NbtList();
-        for (String biome : get()) {
-            valueTag.add(NbtString.of(biome));
+        for (RegistryKey<Biome> biome : get()) {
+            valueTag.add(NbtString.of(biome.getValue().toString()));
         }
         tag.put("value", valueTag);
 
@@ -73,36 +75,29 @@ public class BiomeListSetting extends Setting<List<String>> {
     }
 
     @Override
-    protected List<String> load(NbtCompound tag) {
-        //assert mc.world != null;
-        String biome;
+    protected Set<RegistryKey<Biome>> load(NbtCompound tag) {
         get().clear();
+
         NbtList valueTag = tag.getList("value", 8);
         for (NbtElement tagI : valueTag) {
-            biome = tagI.asString();
-            if (filter == null || filter.test(biome)) get().add(biome);
+            get().add(RegistryKey.of(RegistryKeys.BIOME, Identifier.of(tagI.asString())));
         }
+
         return get();
     }
 
-    public void onChanged() {
-        if(mc.world != null && Modules.get().get(BiomeColorChanger.class).isActive()){
-            mc.worldRenderer.reload(); //gameRenderer.getBlockRenderer().clearStateTextures();
-        }
-    }
-
-    public static class Builder extends SettingBuilder<Builder, List<String>, BiomeListSetting> {
-        private Predicate<String> filter;
+    public static class Builder extends SettingBuilder<BiomeListSetting.Builder, Set<RegistryKey<Biome>>, BiomeListSetting> {
+        private Predicate<RegistryKey<Biome>> filter;
 
         public Builder() {
-            super(new ArrayList<>(0));
+            super(new ObjectOpenHashSet<>());
         }
 
-        public Builder defaultValue(String... defaults) {
-            return defaultValue(defaults != null ? Arrays.asList(defaults) : new ArrayList<>());
+        public BiomeListSetting.Builder defaultValue(RegistryKey<Biome>... defaults) {
+            return defaultValue(defaults != null ? new ObjectOpenHashSet<>(defaults) : new ObjectOpenHashSet<>());
         }
 
-        public Builder filter(Predicate<String> filter) {
+        public BiomeListSetting.Builder filter(Predicate<RegistryKey<Biome>> filter) {
             this.filter = filter;
             return this;
         }

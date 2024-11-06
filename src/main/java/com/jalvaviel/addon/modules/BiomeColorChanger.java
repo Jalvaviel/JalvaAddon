@@ -4,35 +4,50 @@ import com.jalvaviel.addon.Addon;
 //import com.jalvaviel.addon.BiomeESP.BiomeData.BiomeDataSetting;
 //import com.jalvaviel.addon.BiomeESP.BiomeList.BiomeListSetting;
 //import com.jalvaviel.addon.BiomeESP.ESPBiomeData.ESPBiomeData;
+
 import com.jalvaviel.addon.BiomeESP.BiomeData.BiomeDataSetting;
 import com.jalvaviel.addon.BiomeESP.BiomeList.BiomeListSetting;
+
 import com.jalvaviel.addon.BiomeESP.ESPBiomeData.ESPBiomeData;
-import com.jalvaviel.addon.utils.VanillaBiomesRegKeys;
-import com.mojang.logging.LogUtils;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
 import net.minecraft.world.biome.Biome;
-import static meteordevelopment.meteorclient.MeteorClient.LOG;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import net.minecraft.world.biome.BiomeKeys;
+
+import java.lang.reflect.AccessFlag;
+import java.util.*;
+import java.util.stream.Collectors;
 
 //import static com.jalvaviel.addon.utils.ESPBiomeChunk.searchChunk;
 
 
 public class BiomeColorChanger extends Module {
+    public static final Set<RegistryKey<Biome>> FALLBACK_KEYS;
+
+    static {
+        //noinspection unchecked
+        FALLBACK_KEYS = (Set<RegistryKey<Biome>>) (Object) Arrays.stream(BiomeKeys.class.getDeclaredFields())
+            .filter(field -> field.getType() == RegistryKey.class)
+            .filter(field -> field.accessFlags().containsAll(List.of(AccessFlag.STATIC, AccessFlag.PUBLIC)))
+            .map(field -> {
+                try {
+                    return field.get(null);
+                } catch (Throwable t) {
+                    return null;
+                }
+            })
+            .filter(Objects::nonNull)
+            .collect(Collectors.toSet());
+    }
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
 
-    public final Setting<List<String>> biomes = sgGeneral.add(new BiomeListSetting.Builder()
+    public final Setting<Set<RegistryKey<Biome>>> biomes = sgGeneral.add(new BiomeListSetting.Builder()
         .name("biomes")
         .description("Biomes to modify their colors.")
         .build()
     );
-
     public final Setting<ESPBiomeData> defaultBiomeConfig = sgGeneral.add(new GenericSetting.Builder<ESPBiomeData>() // TODO Change to true biome defaults
         .name("default-biome-config")
         .description("Default biome config.")
@@ -47,12 +62,18 @@ public class BiomeColorChanger extends Module {
         .build()
     );
 
-    public final Setting<Map<String, ESPBiomeData>> biomeConfigs = sgGeneral.add(new BiomeDataSetting.Builder<ESPBiomeData>()
+    public final Setting<Map<RegistryKey<Biome>, ESPBiomeData>> biomeConfigs = sgGeneral.add(new BiomeDataSetting.Builder<ESPBiomeData>()
         .name("biome-configs")
         .description("Config for each biome.")
         .defaultData(defaultBiomeConfig)
         .build()
     );
+    public BiomeColorChanger() {
+        super(Addon.CATEGORY, "biome-color-changer", "Change different biomes colors");
+    }
+}
+/*
+
 
     public BiomeColorChanger() {
         super(Addon.CATEGORY, "biome-color-changer", "Change different biomes colors");
@@ -108,5 +129,5 @@ public class BiomeColorChanger extends Module {
         .build()
     );
 */
-}
+
 
