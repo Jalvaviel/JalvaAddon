@@ -1,11 +1,12 @@
 package com.jalvaviel.addon.modules;
 
 import com.jalvaviel.addon.Addon;
-//import com.jalvaviel.addon.utils.ESPBiomeBlock;
-//import com.jalvaviel.addon.utils.ESPBiomeChunk;
-import meteordevelopment.meteorclient.settings.*;
-import meteordevelopment.meteorclient.utils.render.color.SettingColor;
+import meteordevelopment.meteorclient.settings.BoolSetting;
+import meteordevelopment.meteorclient.settings.ColorSetting;
+import meteordevelopment.meteorclient.settings.Setting;
+import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.systems.modules.Module;
+import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.meteorclient.utils.world.Dimension;
 import net.minecraft.util.math.BlockPos;
 

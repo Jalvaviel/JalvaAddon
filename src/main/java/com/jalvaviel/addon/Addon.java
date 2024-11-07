@@ -17,12 +17,6 @@ import net.minecraft.world.biome.BiomeKeys;
 import org.slf4j.Logger;
 import meteordevelopment.meteorclient.gui.utils.SettingsWidgetFactory;
 
-import java.lang.reflect.AccessFlag;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
@@ -56,10 +50,11 @@ public class Addon extends MeteorAddon {
         // Modules
         //Modules.get().add(new MapDownloader());
         Modules.get().add(new MapBoundaries());
-        Modules.get().add(new MushroomBiomeColors());
+        //Modules.get().add(new MushroomBiomeColors());
         Modules.get().add(new FastBreaker());
         Modules.get().add(new ElytraBoostPlus());
         Modules.get().add(new BiomeColorChanger());
+        Modules.get().add(new ChunkTrailer());
         //Optional<RegistryEntryLookup<Biome>> regbiome = BuiltinRegistries.createWrapperLookup().createRegistryLookup().getOptional(RegistryKeys.BIOME);
         //Stream<RegistryKey<? extends Registry<?>>> registries = BuiltinRegistries.createWrapperLookup().streamAllRegistryKeys();
         //Stream<RegistryEntryLookup<Biome>> regbiome2 = regbiome.stream();

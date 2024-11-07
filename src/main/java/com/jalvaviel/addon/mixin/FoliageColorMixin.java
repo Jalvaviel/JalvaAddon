@@ -12,6 +12,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import static meteordevelopment.meteorclient.MeteorClient.LOG;
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 
@@ -25,11 +26,14 @@ public class FoliageColorMixin {
             assert mc.player != null;
             try {
                 RegistryEntry<Biome> currentBiome = mc.world.getBiome(pos);
-                if (biomeColorChanger.biomes.get().contains(currentBiome.getIdAsString())) {
-                    info.setReturnValue(biomeColorChanger.biomeConfigs.get().get(currentBiome.getIdAsString()).foliageColor.getPacked());
+                if (biomeColorChanger.biomes.get().contains(currentBiome.getKey().get())) {
+                    info.setReturnValue(biomeColorChanger.biomeConfigs.get().get(currentBiome.getKey().get()).foliageColor.getPacked());
                 }
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                LOG.info(e.getMessage());
+            }
         }
     }
 }
+
 

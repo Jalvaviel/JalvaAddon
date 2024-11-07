@@ -1,25 +1,14 @@
 package com.jalvaviel.addon.BiomeESP.ESPBiomeData;
 
 import com.jalvaviel.addon.BiomeESP.BiomeData.BiomeDataSetting;
-import com.jalvaviel.addon.BiomeESP.BiomeList.BiomeListSetting;
 import meteordevelopment.meteorclient.gui.GuiTheme;
 import meteordevelopment.meteorclient.gui.WindowScreen;
-import meteordevelopment.meteorclient.gui.screens.settings.RegistryListSettingScreen;
-import meteordevelopment.meteorclient.gui.widgets.WWidget;
-import meteordevelopment.meteorclient.renderer.ShapeMode;
-import meteordevelopment.meteorclient.settings.*;
-import meteordevelopment.meteorclient.systems.modules.render.blockesp.ESPBlockData;
+import meteordevelopment.meteorclient.settings.ColorSetting;
+import meteordevelopment.meteorclient.settings.SettingGroup;
+import meteordevelopment.meteorclient.settings.Settings;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
-import net.minecraft.block.Block;
 import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
 import net.minecraft.world.biome.Biome;
-
-import java.util.List;
-import java.util.Objects;
-import java.util.function.Predicate;
-
-import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class ESPBiomeDataScreen extends WindowScreen {
     private final ESPBiomeData biomeData;
@@ -43,7 +32,7 @@ public class ESPBiomeDataScreen extends WindowScreen {
         sgGeneral.add(new ColorSetting.Builder()
             .name("water-color")
             .description("Color of the water.")
-            .defaultValue(new SettingColor(0, 50, 255,255))
+            .defaultValue(new SettingColor(0, 50, 255))
             .onModuleActivated(settingColorSetting -> settingColorSetting.set(biomeData.waterColor))
             .onChanged(settingColor -> {
                 biomeData.waterColor.set(settingColor);
@@ -55,7 +44,7 @@ public class ESPBiomeDataScreen extends WindowScreen {
         sgGeneral.add(new ColorSetting.Builder()
             .name("sky-color")
             .description("Color of the sky.")
-            .defaultValue(new SettingColor(100, 255, 255,255))
+            .defaultValue(new SettingColor(100, 255, 255))
             .onModuleActivated(settingColorSetting -> settingColorSetting.set(biomeData.skyColor))
             .onChanged(settingColor -> {
                 biomeData.skyColor.set(settingColor);
@@ -67,7 +56,7 @@ public class ESPBiomeDataScreen extends WindowScreen {
         sgGeneral.add(new ColorSetting.Builder()
             .name("foliage-color")
             .description("Color of the foliage.")
-            .defaultValue(new SettingColor(0, 255, 50,255))
+            .defaultValue(new SettingColor(0, 255, 50))
             .onModuleActivated(settingColorSetting -> settingColorSetting.set(biomeData.foliageColor))
             .onChanged(settingColor -> {
                 biomeData.foliageColor.set(settingColor);
@@ -79,7 +68,7 @@ public class ESPBiomeDataScreen extends WindowScreen {
         sgGeneral.add(new ColorSetting.Builder()
             .name("grass-color")
             .description("Color of the grass.")
-            .defaultValue(new SettingColor(0, 255, 50,255))
+            .defaultValue(new SettingColor(0, 255, 100))
             .onModuleActivated(settingColorSetting -> settingColorSetting.set(biomeData.grassColor))
             .onChanged(settingColor -> {
                 biomeData.grassColor.set(settingColor);

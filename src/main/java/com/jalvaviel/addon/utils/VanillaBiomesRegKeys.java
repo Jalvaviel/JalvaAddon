@@ -1,8 +1,6 @@
 package com.jalvaviel.addon.utils;
 
-import net.minecraft.registry.RegistryKey;
 import net.minecraft.util.Identifier;
-import net.minecraft.world.biome.Biome;
 
 import java.util.ArrayList;
 import java.util.List;

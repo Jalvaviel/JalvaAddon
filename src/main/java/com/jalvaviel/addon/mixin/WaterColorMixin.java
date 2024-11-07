@@ -1,7 +1,6 @@
 package com.jalvaviel.addon.mixin;
 
 import com.jalvaviel.addon.modules.BiomeColorChanger;
-import com.jalvaviel.addon.modules.MushroomBiomeColors;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import net.minecraft.client.color.world.BiomeColors;
 import net.minecraft.registry.entry.RegistryEntry;
@@ -14,7 +13,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
-import static net.minecraft.world.biome.BiomeKeys.*;
 
 
 @Mixin(BiomeColors.class)
@@ -27,8 +25,8 @@ public class WaterColorMixin {
             assert mc.player != null;
             try {
                 RegistryEntry<Biome> currentBiome = mc.world.getBiome(pos);
-                if (biomeColorChanger.biomes.get().contains(currentBiome.getIdAsString())) {
-                    info.setReturnValue(biomeColorChanger.biomeConfigs.get().get(currentBiome.getIdAsString()).waterColor.getPacked());
+                if (biomeColorChanger.biomes.get().contains(currentBiome.getKey().get())) {
+                    info.setReturnValue(biomeColorChanger.biomeConfigs.get().get(currentBiome.getKey().get()).waterColor.getPacked());
                 }
             } catch (Exception ignored) {}
         }

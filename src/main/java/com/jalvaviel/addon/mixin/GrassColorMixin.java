@@ -25,8 +25,8 @@ public class GrassColorMixin {
             assert mc.player != null;
             try {
                 RegistryEntry<Biome> currentBiome = mc.world.getBiome(pos);
-                if (biomeColorChanger.biomes.get().contains(currentBiome.getIdAsString())) {
-                    info.setReturnValue(biomeColorChanger.biomeConfigs.get().get(currentBiome.getIdAsString()).grassColor.getPacked());
+                if (biomeColorChanger.biomes.get().contains(currentBiome.getKey().get())) {
+                    info.setReturnValue(biomeColorChanger.biomeConfigs.get().get(currentBiome.getKey().get()).grassColor.getPacked());
                 }
             } catch (Exception ignored) {}
         }

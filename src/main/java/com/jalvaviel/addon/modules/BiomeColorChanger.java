@@ -1,15 +1,12 @@
 package com.jalvaviel.addon.modules;
 
 import com.jalvaviel.addon.Addon;
-//import com.jalvaviel.addon.BiomeESP.BiomeData.BiomeDataSetting;
-//import com.jalvaviel.addon.BiomeESP.BiomeList.BiomeListSetting;
-//import com.jalvaviel.addon.BiomeESP.ESPBiomeData.ESPBiomeData;
-
 import com.jalvaviel.addon.BiomeESP.BiomeData.BiomeDataSetting;
 import com.jalvaviel.addon.BiomeESP.BiomeList.BiomeListSetting;
-
 import com.jalvaviel.addon.BiomeESP.ESPBiomeData.ESPBiomeData;
-import meteordevelopment.meteorclient.settings.*;
+import meteordevelopment.meteorclient.settings.GenericSetting;
+import meteordevelopment.meteorclient.settings.Setting;
+import meteordevelopment.meteorclient.settings.SettingGroup;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import net.minecraft.registry.RegistryKey;
@@ -19,9 +16,6 @@ import net.minecraft.world.biome.BiomeKeys;
 import java.lang.reflect.AccessFlag;
 import java.util.*;
 import java.util.stream.Collectors;
-
-//import static com.jalvaviel.addon.utils.ESPBiomeChunk.searchChunk;
-
 
 public class BiomeColorChanger extends Module {
     public static final Set<RegistryKey<Biome>> FALLBACK_KEYS;
@@ -46,6 +40,7 @@ public class BiomeColorChanger extends Module {
     public final Setting<Set<RegistryKey<Biome>>> biomes = sgGeneral.add(new BiomeListSetting.Builder()
         .name("biomes")
         .description("Biomes to modify their colors.")
+        .onChanged(value -> reload())
         .build()
     );
     public final Setting<ESPBiomeData> defaultBiomeConfig = sgGeneral.add(new GenericSetting.Builder<ESPBiomeData>() // TODO Change to true biome defaults
@@ -53,12 +48,13 @@ public class BiomeColorChanger extends Module {
         .description("Default biome config.")
         .defaultValue(
             new ESPBiomeData(
-                new SettingColor(0, 50, 255, 255),
-                new SettingColor(100, 255, 255, 255),
-                new SettingColor(0, 255, 50, 255),
-                new SettingColor(0, 255, 100, 255)
+                new SettingColor(0, 50, 255),
+                new SettingColor(100, 255, 255),
+                new SettingColor(0, 255, 50),
+                new SettingColor(0, 255, 100)
             )
         )
+        .onChanged(value -> reload())
         .build()
     );
 
@@ -66,68 +62,25 @@ public class BiomeColorChanger extends Module {
         .name("biome-configs")
         .description("Config for each biome.")
         .defaultData(defaultBiomeConfig)
+        .onChanged(value -> reload())
         .build()
     );
+
     public BiomeColorChanger() {
         super(Addon.CATEGORY, "biome-color-changer", "Change different biomes colors");
     }
-}
-/*
 
-
-    public BiomeColorChanger() {
-        super(Addon.CATEGORY, "biome-color-changer", "Change different biomes colors");
+    private void reload() {
+        if (mc.worldRenderer != null && isActive()) mc.worldRenderer.reload();
     }
 
     @Override
     public void onActivate() {
-        if(mc.world != null){
-            mc.worldRenderer.reload(); //gameRenderer.getBlockRenderer().clearStateTextures();
-        }
+        reload();
     }
     @Override
     public void onDeactivate() {
-        if(mc.world != null){
-            mc.worldRenderer.reload(); //gameRenderer.getBlockRenderer().clearStateTextures();
-        }
+        reload();
     }
-
-    //private final List<ESPBiomeGroup> groups = new UnorderedArrayList<>();
-    /*
-    public final Setting<SettingColor> waterColor = sgGeneral.add(new ColorSetting.Builder()
-        .name("water-color")
-        .description("The color of the water.")
-        .defaultValue(new SettingColor(200, 0, 200))
-        .onChanged(val -> reload())
-        .build()
-    );
-    public final Setting<SettingColor> deepOceanWaterColor = sgGeneral.add(new ColorSetting.Builder()
-        .name("deep-water-color")
-        .description("The color of the deep water.")
-        .defaultValue(new SettingColor(0, 200, 200))
-        .onChanged(val -> reload())
-        .build()
-    );
-    public final Setting<SettingColor> skyColor = sgGeneral.add(new ColorSetting.Builder()
-        .name("sky-color")
-        .description("The color of the sky.")
-        .defaultValue(new SettingColor(200, 0, 200))
-        .onChanged(val -> reload())
-        .build()
-    );
-    public final Setting<SettingColor> deepOceanSkyColor = sgGeneral.add(new ColorSetting.Builder()
-        .name("deep-ocean-sky-color")
-        .description("The color of the deep ocean sky.")
-        .defaultValue(new SettingColor(0, 200, 200))
-        .onChanged(val -> reload())
-        .build()
-    );
-    public final Setting<Boolean> renderBlocks = sgGeneral.add(new BoolSetting.Builder()
-        .name("renderBlocks")
-        .description("Renders blocks within the biome such as air, water, etc.")
-        .defaultValue(true)
-        .build()
-    );
-*/
-
+}
 

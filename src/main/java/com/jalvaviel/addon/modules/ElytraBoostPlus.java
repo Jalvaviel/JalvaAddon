@@ -3,14 +3,14 @@ package com.jalvaviel.addon.modules;
 import com.jalvaviel.addon.Addon;
 import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
-import meteordevelopment.meteorclient.settings.SettingGroup;
+import meteordevelopment.meteorclient.settings.*;
+import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.item.Items;
 import net.minecraft.util.math.MathHelper;
-import meteordevelopment.meteorclient.settings.*;
-import meteordevelopment.meteorclient.systems.modules.Module;
 import net.minecraft.util.math.Vec3d;
+
 
 
 public class ElytraBoostPlus extends Module {

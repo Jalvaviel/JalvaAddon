@@ -1,33 +1,23 @@
 package com.jalvaviel.addon.BiomeESP.BiomeData;
 
 import com.jalvaviel.addon.BiomeESP.ESPBiomeData.IBiomeData;
-import com.jalvaviel.addon.modules.BiomeColorChanger;
-import com.jalvaviel.addon.utils.VanillaBiomesRegKeys;
-import meteordevelopment.meteorclient.settings.BlockDataSetting;
-import meteordevelopment.meteorclient.settings.IBlockData;
 import meteordevelopment.meteorclient.settings.IVisible;
 import meteordevelopment.meteorclient.settings.Setting;
-import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.utils.misc.IChangeable;
 import meteordevelopment.meteorclient.utils.misc.ICopyable;
 import meteordevelopment.meteorclient.utils.misc.IGetter;
 import meteordevelopment.meteorclient.utils.misc.ISerializable;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.registry.Registries;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.biome.Biome;
-import net.minecraft.world.biome.BiomeKeys;
 
-import java.lang.reflect.AccessFlag;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 import static com.jalvaviel.addon.modules.BiomeColorChanger.FALLBACK_KEYS;
-import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class BiomeDataSetting <T extends ICopyable<T> & ISerializable<T> & IChangeable & IBiomeData<T>> extends Setting<Map<RegistryKey<Biome>, T>> {
     public final IGetter<T> defaultData;
@@ -40,13 +30,6 @@ public class BiomeDataSetting <T extends ICopyable<T> & ISerializable<T> & IChan
             }
         }
         this.defaultData = defaultData;
-    }
-
-    @Override
-    public void onChanged() {
-        if(mc.world != null && Modules.get().get(BiomeColorChanger.class).isActive()){
-            mc.worldRenderer.reload(); //gameRenderer.getBlockRenderer().clearStateTextures();
-        }
     }
 
     @Override

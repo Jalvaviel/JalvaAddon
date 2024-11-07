@@ -5,7 +5,7 @@ import com.jalvaviel.addon.modules.BiomeColorChanger;
 import meteordevelopment.meteorclient.gui.GuiTheme;
 import meteordevelopment.meteorclient.gui.WidgetScreen;
 import meteordevelopment.meteorclient.gui.utils.IScreenFactory;
-import meteordevelopment.meteorclient.systems.modules.render.blockesp.ESPBlockDataScreen;
+import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.utils.misc.IChangeable;
 import meteordevelopment.meteorclient.utils.misc.ICopyable;
 import meteordevelopment.meteorclient.utils.misc.ISerializable;
@@ -13,6 +13,8 @@ import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.world.biome.Biome;
+
+import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class ESPBiomeData implements ICopyable<ESPBiomeData>, ISerializable<ESPBiomeData>, IChangeable, IBiomeData<ESPBiomeData>, IScreenFactory {
     public SettingColor waterColor;
@@ -38,6 +40,7 @@ public class ESPBiomeData implements ICopyable<ESPBiomeData>, ISerializable<ESPB
         return new ESPBiomeDataScreen(theme, this, null, null);
     }
 
+
     @Override
     public boolean isChanged() {
         return changed;
@@ -45,6 +48,7 @@ public class ESPBiomeData implements ICopyable<ESPBiomeData>, ISerializable<ESPB
 
     public void changed() {
         changed = true;
+        if (mc.worldRenderer != null && Modules.get().isActive(BiomeColorChanger.class)) mc.worldRenderer.reload();
     }
 
     public void tickRainbow() {
@@ -87,9 +91,9 @@ public class ESPBiomeData implements ICopyable<ESPBiomeData>, ISerializable<ESPB
 
     @Override
     public ESPBiomeData fromTag(NbtCompound tag) {
-        waterColor.fromTag(tag.getCompound("lineColor"));
-        skyColor.fromTag(tag.getCompound("sideColor"));
-        foliageColor.fromTag(tag.getCompound("sideColor"));
+        waterColor.fromTag(tag.getCompound("waterColor"));
+        skyColor.fromTag(tag.getCompound("skyColor"));
+        foliageColor.fromTag(tag.getCompound("foliageColor"));
         grassColor.fromTag(tag.getCompound("grassColor"));
 
         changed = tag.getBoolean("changed");

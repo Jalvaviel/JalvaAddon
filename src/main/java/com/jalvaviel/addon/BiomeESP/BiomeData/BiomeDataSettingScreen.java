@@ -1,33 +1,22 @@
 package com.jalvaviel.addon.BiomeESP.BiomeData;
 
-import com.jalvaviel.addon.BiomeESP.BiomeList.BiomeListSetting;
 import com.jalvaviel.addon.BiomeESP.ESPBiomeData.IBiomeData;
-import com.jalvaviel.addon.utils.VanillaBiomesRegKeys;
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import meteordevelopment.meteorclient.gui.GuiTheme;
 import meteordevelopment.meteorclient.gui.WindowScreen;
 import meteordevelopment.meteorclient.gui.renderer.GuiRenderer;
 import meteordevelopment.meteorclient.gui.widgets.containers.WTable;
 import meteordevelopment.meteorclient.gui.widgets.input.WTextBox;
 import meteordevelopment.meteorclient.gui.widgets.pressable.WButton;
-import meteordevelopment.meteorclient.settings.BlockDataSetting;
-import meteordevelopment.meteorclient.settings.IBlockData;
 import meteordevelopment.meteorclient.utils.misc.IChangeable;
 import meteordevelopment.meteorclient.utils.misc.ICopyable;
 import meteordevelopment.meteorclient.utils.misc.ISerializable;
-import meteordevelopment.meteorclient.utils.misc.Names;
-import net.minecraft.block.Block;
-import net.minecraft.registry.*;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.util.Identifier;
+import net.minecraft.registry.RegistryKey;
 import net.minecraft.world.biome.Biome;
-import net.minecraft.world.biome.BiomeKeys;
 import org.apache.commons.lang3.StringUtils;
 
-import java.lang.reflect.AccessFlag;
-import java.util.*;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.List;
+
 import static com.jalvaviel.addon.modules.BiomeColorChanger.FALLBACK_KEYS;
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
