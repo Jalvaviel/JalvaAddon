@@ -1,29 +1,27 @@
-# JalvaAddon
+## Release 0.6 of JalvaAddon
+### Biome Color Changer:
+- Lets you change the water color, sky color, foliage color and grass color of the biomes in-game.
+- Has a default color config and a biome specific color config.
 
-This is an addon for Meteor Client in Minecraft.
+### Chunk Trailer
+- Lets you generate chunk trails with elytra.
+- Make replays of the flight trajectories and repeat them later.
+- Change the angle of deviation from the player's camera to generate random waypoints.
+- Change the waypoint distance generation.
+- See the flight stats in-game after finishing the chunk trail.
+- Let's you see the waypoints in-game with an overlay.
 
-## Included Modules
+### Elytra Boost +
+- Meteors boost sucks ass, so I ""borrowed"" Thunderhack's implementation for 2b2t.
+- Boost by pressing the spacebar or let the module boost for you.
+- Set a certain height and upwards speed as an autopilot.
+- Set a speed limit.
+- Auto recast and auto replace for elytra.
+
+### Fast Breaker
+- A little bit scuffed, but you can instamine blocks with a packet exploit.
+- Packet limiter and a mining threshold which can be modified.
 
 ### Map Boundaries
-
-Overlays a border for each map region in-game.
-- Customize the color of the border.
-- Make it not render through blocks.
-
-### Mushroom Biome Colors
-
-Changes the color of the water, sky and blocks on Mushroom Biomes, useful for detecting Mushroom Biome borders.
-- Customize the water color.
-- Customize the sky color.
-- Customize the air block color (in dev).
-
-## Contribute:  
-
-You can contribute or make your own branch by following these steps:
-- Clone this project with `git clone https://github.com/Jalvaviel/JalvaAddon.git` or download the zip of the source code.
-- Open the project with your favourite IDE (I reccomend **JetBrains IntelliJ**)
-- Let gradle build the dependencies before making any changes.
-- To build your .jar file, run the gradle `build` task. If you want to debug, run the gradle `runClient` task.
-
-## FAQ
-Since there's no frequent questions, I'll answer them personally at @jalvaviel in **Discord** or in the issues section in this **GitHub Repository**.
+- Highlights the map region boundaries in-game. I used it to delimit plots on MAI5.
+- Change the color of the highlight.
