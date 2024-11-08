@@ -34,7 +34,7 @@ public class MapBoundaries extends Module {
     );
 
     public MapBoundaries() {
-        super(Addon.CATEGORY, "Map Boundaries", "Overlays the current map boundaries");
+        super(Addon.CATEGORY, "map-boundaries", "Overlays the current map boundaries");
     }
 
     @EventHandler

@@ -1,8 +1,6 @@
 package com.jalvaviel.addon.utils;
+
 import java.io.File;
-import java.io.FilenameFilter;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -11,30 +9,94 @@ import meteordevelopment.meteorclient.settings.IVisible;
 import meteordevelopment.meteorclient.settings.Setting;
 import net.minecraft.nbt.NbtCompound;
 
+public class FileSetting extends Setting<File> {
+    public final List<File> values;
+    private final List<String> suggestions;
+
+    public FileSetting(String name, String description, File defaultValue, List<File> values,
+                       Consumer<File> onChanged, Consumer<Setting<File>> onModuleActivated, IVisible visible) {
+        super(name, description, defaultValue, onChanged, onModuleActivated, visible);
+
+        this.values = values;
+        this.suggestions = new ArrayList<>(values.size());
+        for (File value : values) suggestions.add(value.getName());
+    }
+
+    @Override
+    protected File parseImpl(String str) {
+        File file = new File(str);
+        return values.contains(file) ? file : null;
+    }
+
+    @Override
+    protected boolean isValueValid(File value) {
+        return true;
+    }
+
+    @Override
+    public List<String> getSuggestions() {
+        return suggestions;
+    }
+
+    @Override
+    public NbtCompound save(NbtCompound tag) {
+        tag.putString("value", get().getAbsolutePath());
+        return tag;
+    }
+
+    @Override
+    public File load(NbtCompound tag) {
+        String FileString = tag.getString("value");
+        File file = new File(FileString);
+        if (isValueValid(file)) {
+            set(file);
+        }
+        return get();
+    }
+
+    public static class Builder extends SettingBuilder<Builder, File, FileSetting> {
+        private List<File> values = new ArrayList<>();
+
+        public Builder() {
+            super(null);
+        }
+
+        public Builder values(List<File> values) {
+            this.values = values;
+            return this;
+        }
+
+        @Override
+        public FileSetting build() {
+            return new FileSetting(name, description, defaultValue, values, onChanged, onModuleActivated, visible);
+        }
+    }
+}
+
+/*
 public class FileSetting<T> extends Setting<T> {
 
     private final File[] values;
     private final List<String> suggestions;
-    private final Path path;
+    private final File File;
     private final String format;
 
-    // Constructor for FileSetting
-    public FileSetting(String name, String description, T defaultValue, Path path, String format,
+    public FileSetting(String name, String description, T defaultValue, File File, String format,
                        Consumer<T> onChanged, Consumer<Setting<T>> onModuleActivated,
                        IVisible visible) {
         super(name, description, defaultValue, onChanged, onModuleActivated, visible);
-        this.path = path;
+        this.File = File;
         this.format = format;
-        this.values = valuesFromPath(path, format);
+        this.values = valuesFromFile(File, format);
         this.suggestions = new ArrayList<>(values.length);
         for (File value : values) suggestions.add(value.getName());
     }
 
-    protected static File[] valuesFromPath(Path path, String format) {
+    protected static File[] valuesFromFile(File File, String format) {
         File[] listFiles = new File[0];
-        if (Files.exists(path) && Files.isDirectory(path)) {
+        if (Files.exists(File) && Files.isDirectory(File)) {
             FilenameFilter filter = (dir, name) -> name.toLowerCase().endsWith(format);
-            listFiles = path.toFile().listFiles(filter);
+            listFiles = File.toFile().listFiles(filter);
         }
         return listFiles;
     }
@@ -74,15 +136,15 @@ public class FileSetting<T> extends Setting<T> {
     // Builder class to facilitate creating FileSetting
     public static class Builder<T> extends SettingBuilder<Builder<T>, T, FileSetting<T>> {
 
-        private Path path;
+        private File File;
         private String format;
 
         public Builder() {
             super(null);
         }
 
-        public Builder<T> path(Path path) {
-            this.path = path;
+        public Builder<T> File(File File) {
+            this.File = File;
             return this;
         }
 
@@ -93,7 +155,9 @@ public class FileSetting<T> extends Setting<T> {
 
         @Override
         public FileSetting<T> build() {
-            return new FileSetting<>(name, description, defaultValue, path, format, onChanged, onModuleActivated, visible);
+            return new FileSetting<>(name, description, defaultValue, File, format, onChanged, onModuleActivated, visible);
         }
     }
 }
+
+ */

@@ -4,9 +4,11 @@ import com.jalvaviel.addon.BiomeESP.BiomeData.BiomeDataSettingScreen;
 import com.jalvaviel.addon.BiomeESP.BiomeList.BiomeListSetting;
 import com.jalvaviel.addon.BiomeESP.BiomeList.BiomeListSettingScreen;
 import com.jalvaviel.addon.modules.*;
+import com.jalvaviel.addon.utils.FileSetting;
 import com.mojang.logging.LogUtils;
 import meteordevelopment.meteorclient.addons.MeteorAddon;
 import meteordevelopment.meteorclient.gui.renderer.GuiRenderer;
+import meteordevelopment.meteorclient.gui.widgets.input.WDropdown;
 import meteordevelopment.meteorclient.gui.widgets.pressable.WButton;
 import meteordevelopment.meteorclient.systems.hud.HudGroup;
 import meteordevelopment.meteorclient.systems.modules.Category;
@@ -17,6 +19,8 @@ import net.minecraft.world.biome.BiomeKeys;
 import org.slf4j.Logger;
 import meteordevelopment.meteorclient.gui.utils.SettingsWidgetFactory;
 
+
+import java.io.File;
 
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
@@ -36,6 +40,7 @@ public class Addon extends MeteorAddon {
                 setting.reset();
             };
         });
+
         SettingsWidgetFactory.registerCustomFactory(BiomeDataSetting.class, (theme) -> (table, setting) -> {
             WButton button = table.add(theme.button(GuiRenderer.EDIT)).expandCellX().widget();
             button.action = () -> mc.setScreen(new BiomeDataSettingScreen(theme, (BiomeDataSetting<?>) setting));
@@ -44,7 +49,6 @@ public class Addon extends MeteorAddon {
                 setting.reset();
             };
         });
-
 
 
         // Modules
