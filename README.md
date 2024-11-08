@@ -1,4 +1,9 @@
+# JalvaAddon
+
+This is an addon for Meteor Client in Minecraft.
+
 ## Release 0.6 of JalvaAddon
+
 ### Biome Color Changer:
 - Lets you change the water color, sky color, foliage color and grass color of the biomes in-game.
 - Has a default color config and a biome specific color config.
@@ -25,3 +30,11 @@
 ### Map Boundaries
 - Highlights the map region boundaries in-game. I used it to delimit plots on MAI5.
 - Change the color of the highlight.
+
+## Contribute:  
+
+You can contribute or make your own branch by following these steps:
+- Clone this project with `git clone https://github.com/Jalvaviel/JalvaAddon.git` or download the zip of the source code.
+- Open the project with your favourite IDE (I recommend **JetBrains IntelliJ**)
+- Let gradle build the dependencies before making any changes.
+- To build your .jar file, run the gradle `build` task. If you want to test it, run the gradle `runClient` task.
