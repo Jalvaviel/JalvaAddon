@@ -86,7 +86,6 @@ public class ChunkTrailer extends Module {
         .description("The distance threshold of a waypoint.")
         .defaultValue(3)
         .sliderRange(1,20)
-        .visible(() -> replayMode.get() != ReplayMode.Load)
         .build()
     );
 
