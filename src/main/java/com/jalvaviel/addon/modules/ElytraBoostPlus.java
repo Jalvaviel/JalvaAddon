@@ -1,7 +1,6 @@
 package com.jalvaviel.addon.modules;
 
 import com.jalvaviel.addon.Addon;
-import com.jalvaviel.addon.utils.ElytraUtils;
 import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
@@ -15,10 +14,9 @@ import net.minecraft.item.ElytraItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
-
-import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 
 public class ElytraBoostPlus extends Module {
@@ -129,10 +127,52 @@ public class ElytraBoostPlus extends Module {
         .build()
     );
 
+    public final Setting<Boolean> doReplenishFireworks = sgMisc.add(new BoolSetting.Builder()
+        .name("replenish-fireworks")
+        .description("Replenishes fireworks from the player's inventory.")
+        .defaultValue(false)
+        .build()
+    );
+
+    public final Setting<Integer> replenishSlot = sgMisc.add(new IntSetting.Builder()
+        .name("replenish-slot")
+        .description("The hotbar slot to move the fireworks.")
+        .defaultValue(9)
+        .sliderRange(1,9)
+        .visible(doReplenishFireworks::get)
+        .build()
+    );
+
+    public final Setting<Boolean> doUseFireworks = sgMisc.add(new BoolSetting.Builder()
+        .name("use-fireworks")
+        .description("Uses fireworks to boost you when you slow down.")
+        .defaultValue(false)
+        .build()
+    );
+
+    public final Setting<Double> fireworkMinSpeed = sgMisc.add(new DoubleSetting.Builder()
+        .name("firework-min-speed")
+        .description("The minimum speed before using a firework.")
+        .defaultValue(1)
+        .sliderRange(0,2.90)
+        .visible(doUseFireworks::get)
+        .build()
+    );
+
+    public final Setting<Integer> fireworkDelay = sgMisc.add(new IntSetting.Builder()
+        .name("firework-delay")
+        .description("The delay before using another firework.")
+        .defaultValue(10)
+        .sliderRange(0,100)
+        .visible(doUseFireworks::get)
+        .build()
+    );
+
 
     protected float currentPlayerSpeed;
     protected float height;
-    private int counter;
+    private int elytraCounter;
+    private int fireworkCounter;
 
     private double[] forwardWithoutStrafe(final double d) {
         assert mc.player != null;
@@ -164,13 +204,39 @@ public class ElytraBoostPlus extends Module {
         }
 
         if (doRecast.get()) {
-            if (recastCheck()) {
-                counter++;
-                if (counter >= recastDelay.get()) {
+            if (recastCheck() && !mc.player.isOnGround()) {
+                elytraCounter++;
+                if (elytraCounter >= recastDelay.get()) {
                     mc.player.startFallFlying();
                     mc.player.networkHandler.sendPacket(new ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.START_FALL_FLYING));
-                    counter = 0;
+                    elytraCounter = 0;
                 }
+            }
+        }
+
+        if (doReplenishFireworks.get()) {
+            FindItemResult fireworks = InvUtils.find(Items.FIREWORK_ROCKET);
+
+            if (fireworks.found() && !fireworks.isHotbar()) {
+                InvUtils.move().from(fireworks.slot()).toHotbar(replenishSlot.get()-1);
+            }
+        }
+
+        if (doUseFireworks.get()) {
+            fireworkCounter++;
+            FindItemResult itemResult = InvUtils.findInHotbar(Items.FIREWORK_ROCKET);
+            if (!itemResult.found() || mc.player.getMovement().lengthSquared() >= fireworkMinSpeed.get()) return;
+            if (fireworkCounter >= fireworkDelay.get()) {
+                if (itemResult.isOffhand()) {
+                    mc.interactionManager.interactItem(mc.player, Hand.OFF_HAND);
+                    mc.player.swingHand(Hand.OFF_HAND);
+                } else {
+                    InvUtils.swap(itemResult.slot(), true);
+                    mc.interactionManager.interactItem(mc.player, Hand.MAIN_HAND);
+                    mc.player.swingHand(Hand.MAIN_HAND);
+                    InvUtils.swapBack();
+                }
+                fireworkCounter = 0;
             }
         }
     }

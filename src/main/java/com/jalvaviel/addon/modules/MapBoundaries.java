@@ -15,19 +15,19 @@ import meteordevelopment.orbit.EventHandler;
 public class MapBoundaries extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final Setting<SettingColor> outlineColor = sgGeneral.add(new ColorSetting.Builder()
-        .name("Outline Color")
+        .name("outline-color")
         .description("The color of the outline")
         .defaultValue(new SettingColor(255, 0, 0, 255))
         .build()
     );
     private final Setting<SettingColor> sideColor = sgGeneral.add(new ColorSetting.Builder()
-        .name("Side Color")
+        .name("side-color")
         .description("The color of the side")
         .defaultValue(new SettingColor(255, 0, 0, 64))
         .build()
     );
     private final Setting<Boolean> occlusion = sgGeneral.add(new BoolSetting.Builder()
-        .name("Occlusion")
+        .name("occlusion-culling")
         .description("Hide the faces that are covered by blocks")
         .defaultValue(true)
         .build()
