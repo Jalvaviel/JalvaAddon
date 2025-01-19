@@ -2,6 +2,7 @@ package com.jalvaviel.addon.modules;
 
 import com.jalvaviel.addon.Addon;
 import meteordevelopment.meteorclient.events.entity.player.PlayerMoveEvent;
+import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
@@ -9,14 +10,19 @@ import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
+import net.minecraft.block.BlockState;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.item.ElytraItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket;
+import net.minecraft.network.packet.s2c.play.PlayerPositionLookS2CPacket;
 import net.minecraft.util.Hand;
+import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.RaycastContext;
 
 
 public class ElytraBoostPlus extends Module {
@@ -168,6 +174,47 @@ public class ElytraBoostPlus extends Module {
         .build()
     );
 
+    public final Setting<Boolean> fixYaw = sgMisc.add(new BoolSetting.Builder()
+        .name("fix-yaw")
+        .description("Fixes your yaw in 45 degree angles.")
+        .defaultValue(false)
+        .build()
+    );
+
+    public final Setting<Boolean> avoidObstacles = sgMisc.add(new BoolSetting.Builder()
+        .name("avoid-obstacles")
+        .description("Avoids obstacles in nether highways.")
+        .defaultValue(false)
+        .build()
+    );
+
+    public final Setting<Integer> obstacleDistance = sgMisc.add(new IntSetting.Builder()
+        .name("obstacle-distance")
+        .description("The max distance to check the obstacle.")
+        .defaultValue(20)
+        .sliderRange(1,64)
+        .visible(avoidObstacles::get)
+        .build()
+    );
+
+    public final Setting<Double> deltaHorizontal = sgMisc.add(new DoubleSetting.Builder()
+        .name("delta-horizontal")
+        .description("The horizontal offset to take into account for the player hitbox.")
+        .defaultValue(0.6)
+        .sliderRange(0,4)
+        .visible(avoidObstacles::get)
+        .build()
+    );
+
+    public final Setting<Double> deltaVertical = sgMisc.add(new DoubleSetting.Builder()
+        .name("delta-vertical")
+        .description("The vertical offset to take into account for the player hitbox.")
+        .defaultValue(2)
+        .sliderRange(0,4)
+        .visible(avoidObstacles::get)
+        .build()
+    );
+
 
     protected float currentPlayerSpeed;
     protected float height;
@@ -180,6 +227,26 @@ public class ElytraBoostPlus extends Module {
         final double d4 = d * Math.cos(Math.toRadians(f3 + 90.0f));
         final double d5 = d * Math.sin(Math.toRadians(f3 + 90.0f));
         return new double[]{d4, d5};
+    }
+
+    private void onAvoidObstacles() {
+        assert mc.player != null;
+        Vec3d playerPos = mc.player.getPos();
+        Vec3d direction = mc.player.getRotationVector();
+        direction = new Vec3d(direction.x, 0, direction.z).normalize(); // Flatten to horizontal direction
+        Vec3d start = playerPos;
+        Vec3d end = playerPos.add(direction.multiply(obstacleDistance.get()));
+        RaycastContext context = new RaycastContext(start, end, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, mc.player);
+        BlockHitResult hitResult = mc.world.raycast(context);
+        if (hitResult.getType() == BlockHitResult.Type.BLOCK) {
+            Vec3d hitPos = Vec3d.ofCenter(hitResult.getBlockPos()); // Center of the block
+            double rawHorizontalDistance = hitPos.distanceTo(playerPos);
+            double adjustedHorizontalDistance = rawHorizontalDistance - 0.6; // 0.6 / 2 since we only adjust one side
+            adjustedHorizontalDistance = Math.max(adjustedHorizontalDistance, 0);
+            double heightDifference = hitPos.y - (playerPos.y + 2); // Approx. player eye height above feet (1.62 blocks)
+            float pitch = (float) Math.toDegrees(Math.atan2(heightDifference, adjustedHorizontalDistance));
+            mc.player.setPitch(pitch);
+        }
     }
 
     @Override
@@ -214,6 +281,15 @@ public class ElytraBoostPlus extends Module {
             }
         }
 
+        if (fixYaw.get()) {
+            float nearestYaw = Math.round((mc.player.getYaw() + 1f) / 45f) * 45f;
+            mc.player.setYaw((float) MathHelper.lerp(0.3,mc.player.getYaw(),nearestYaw));
+        }
+
+        if (avoidObstacles.get()) {
+            onAvoidObstacles();
+        }
+
         if (doReplenishFireworks.get()) {
             FindItemResult fireworks = InvUtils.find(Items.FIREWORK_ROCKET);
 
@@ -239,6 +315,7 @@ public class ElytraBoostPlus extends Module {
                 fireworkCounter = 0;
             }
         }
+
     }
 
     private boolean recastCheck() {
@@ -267,6 +344,7 @@ public class ElytraBoostPlus extends Module {
 
             if (currentPlayerSpeed >= minUpSpeed.get()) mc.player.setPitch((float) MathHelper.clamp(MathHelper.wrapDegrees
                 (Math.toDegrees(Math.atan2((height - mc.player.getY()) * -1.0, 10))), -50, 50));
+
             else mc.player.setPitch(0.25F);
         }
 
@@ -285,3 +363,10 @@ public class ElytraBoostPlus extends Module {
         mc.player.setVelocity(e.movement.x, e.movement.y, e.movement.z);
     }
 }
+
+/*
+if (currentPlayerSpeed >= minUpSpeed.get()) mc.player.setPitch((float) MathHelper.clamp(MathHelper.wrapDegrees
+                (Math.toDegrees(Math.atan2((height - mc.player.getY()) * -1.0, 10))), -50, 50));
+
+            else mc.player.setPitch(0.25F);
+ */

@@ -52,17 +52,12 @@ public class Addon extends MeteorAddon {
 
 
         // Modules
-        //Modules.get().add(new MapDownloader());
         Modules.get().add(new MapBoundaries());
-        //Modules.get().add(new MushroomBiomeColors());
         Modules.get().add(new FastBreaker());
         Modules.get().add(new ElytraBoostPlus());
         Modules.get().add(new BiomeColorChanger());
         Modules.get().add(new ChunkTrailer());
-        //Optional<RegistryEntryLookup<Biome>> regbiome = BuiltinRegistries.createWrapperLookup().createRegistryLookup().getOptional(RegistryKeys.BIOME);
-        //Stream<RegistryKey<? extends Registry<?>>> registries = BuiltinRegistries.createWrapperLookup().streamAllRegistryKeys();
-        //Stream<RegistryEntryLookup<Biome>> regbiome2 = regbiome.stream();
-        //JalvaAddonSettingsWidgetFactory widgetFactory = new JalvaAddonSettingsWidgetFactory();
+        //Modules.get().add(new SpawnerFarm());
 
         // Commands
         //Commands.add(new Pos1());

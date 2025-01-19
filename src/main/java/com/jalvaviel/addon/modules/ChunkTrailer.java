@@ -31,12 +31,15 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 import static java.lang.Math.*;
+import static meteordevelopment.meteorclient.MeteorClient.mc;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_GRAVE_ACCENT;
 import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_MIDDLE;
 
@@ -213,10 +216,12 @@ public class ChunkTrailer extends Module {
         if (Files.notExists(replaysPath)) Files.createDirectory(replaysPath);
 
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        String isGenerated = replayMode.get() == ReplayMode.Generate ? "G" : "S";
+        //String dimension = mc.world.getRegistryKey().getValue().toString();
+        String worldName = Utils.getWorldName().replaceAll("[<>:\"/\\\\|?*]","_");
+        String date = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm"));
 
-        FileWriter writer = new FileWriter(replaysPath + "/"
-            + Utils.getWorldName() + "(" + (int) waypoints.getLast().x + "," + (int) waypoints.getLast().z + ")" + isGenerated + ".json");
+        String filePath = replaysPath + "/" + worldName + "(" + date + ")" + ".json";
+        FileWriter writer = new FileWriter(filePath);
         gson.toJson(waypoints, writer);
         writer.close();
     }
@@ -277,6 +282,7 @@ public class ChunkTrailer extends Module {
         originalAngle = mc.player.getYaw();
         if (!Modules.get().isActive(ElytraBoostPlus.class)) {
             if (autoEnableElytraBoost.get()) {
+                Modules.get().get(ElytraBoostPlus.class).fixYaw.set(false); // TODO set this to elytra utils or something.
                 Modules.get().get(ElytraBoostPlus.class).toggle();
             } else {
                 warning("You don't have ElytraBoostPlus enabled, consider enabling it.");
