@@ -1,4 +1,4 @@
-package com.jalvaviel.addon.modules;
+package com.jalvaviel.addon.modules.old;
 
 import com.jalvaviel.addon.Addon;
 import com.jalvaviel.addon.utils.BlockUtils;

@@ -5,13 +5,14 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.jalvaviel.addon.Addon;
 import com.mojang.logging.LogUtils;
+import meteordevelopment.meteorclient.events.entity.DamageEvent;
+import meteordevelopment.meteorclient.events.game.GameLeftEvent;
 import meteordevelopment.meteorclient.events.meteor.KeyEvent;
 import meteordevelopment.meteorclient.events.meteor.MouseButtonEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
-import meteordevelopment.meteorclient.systems.macros.Macro;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.utils.Utils;
@@ -21,10 +22,8 @@ import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
-import org.lwjgl.glfw.GLFW;
 
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -39,11 +38,9 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
 import static java.lang.Math.*;
-import static meteordevelopment.meteorclient.MeteorClient.mc;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_GRAVE_ACCENT;
-import static org.lwjgl.glfw.GLFW.GLFW_MOUSE_BUTTON_MIDDLE;
 
-public class ChunkTrailer extends Module {
+public class ChunkTrailer extends Module{
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgRender = settings.createGroup("Render");
 
@@ -52,6 +49,13 @@ public class ChunkTrailer extends Module {
         Save,
         Load
     }
+
+    private enum LoadMode {
+        All,
+        Resume,
+        Nearest
+    }
+
 
     public ChunkTrailer() {
         super(Addon.CATEGORY, "chunk-trailer", "Generates random chunk trails");
@@ -79,6 +83,14 @@ public class ChunkTrailer extends Module {
         .visible(() -> replayMode.get() == ReplayMode.Load)
         .supplier(ChunkTrailer::getReplayFiles)
         .defaultValue("")
+        .build()
+    );
+
+    private final Setting<LoadMode> loadMode = sgGeneral.add(new EnumSetting.Builder<LoadMode>()
+        .name("load-mode")
+        .description("Selects which checkpoint to start from.")
+        .visible(() -> replayMode.get() == ReplayMode.Load)
+        .defaultValue(LoadMode.Resume)
         .build()
     );
 
@@ -133,10 +145,23 @@ public class ChunkTrailer extends Module {
         .build()
     );
 
+    private final Setting<Boolean> autoEnableElytraExtras = sgGeneral.add(new BoolSetting.Builder()
+        .name("auto-enable-elytra-extras")
+        .description("Enables the ElytraExtras module automatically.")
+        .defaultValue(true)
+        .build()
+    );
 
-    private final Setting<Boolean> autoEnableElytraBoost = sgGeneral.add(new BoolSetting.Builder()
-        .name("auto-enable-elytra-boost")
-        .description("Enables the ElytraBoostPlus module automatically.")
+    private final Setting<Boolean> disableOnDisconnect = sgGeneral.add(new BoolSetting.Builder()
+        .name("disable-on-disconnect")
+        .description("Disables this module when disconnecting or getting kicked.")
+        .defaultValue(true)
+        .build()
+    );
+
+    private final Setting<Boolean> disableOnDamage = sgGeneral.add(new BoolSetting.Builder()
+        .name("disable-on-damage")
+        .description("Disables this module when receiving damage.")
         .defaultValue(false)
         .build()
     );
@@ -180,9 +205,10 @@ public class ChunkTrailer extends Module {
     );
 
     ArrayList<Waypoint> waypoints = new ArrayList<>();
-    int nextWaypointNumber;
+    int nextWaypointNumber = 0;
     long startEpochTime;
     float originalAngle;
+    boolean disconnected = false;
 
     private static String[] getReplayFiles() {
         try {
@@ -239,7 +265,28 @@ public class ChunkTrailer extends Module {
             else waypoints.add(new Waypoint(waypoint.x, waypoint.y, waypoint.z));
         }
         reader.close();
-        nextWaypointNumber = 0;
+        if (loadMode.get() == LoadMode.All) nextWaypointNumber = 0;
+        if (loadMode.get() == LoadMode.Nearest) nextWaypointNumber = getNearestCheckpoint();
+        info("Loaded " + waypoints.size() + " waypoints.");
+        info("First waypoint " + nextWaypointNumber + " " + waypoints.get(nextWaypointNumber).getWaypoint());
+    }
+
+    private int getNearestCheckpoint() {
+        assert mc.player != null;
+        if (waypoints.isEmpty() || waypoints.size() == 1) {
+            return 0;
+        }
+        Vec3d playerPos = mc.player.getPos();
+        float minDistance = (float) waypoints.get(0).getWaypoint().distanceTo(playerPos);
+        int nearestIndex = 0;
+        for (int index = 1; index < waypoints.size(); index++) {
+            float distance = (float) waypoints.get(index).getWaypoint().distanceTo(playerPos);
+            if (distance < minDistance) {
+                minDistance = distance;
+                nearestIndex = index;
+            }
+        }
+        return nearestIndex;
     }
 
     private void showStats() {
@@ -277,15 +324,16 @@ public class ChunkTrailer extends Module {
     @Override
     public void onActivate() {
         assert mc.player != null;
-        nextWaypointNumber = 0;
+        if (loadMode.get() == LoadMode.All) nextWaypointNumber = 0;
+        if (loadMode.get() == LoadMode.Nearest) nextWaypointNumber = getNearestCheckpoint();
         startEpochTime = System.currentTimeMillis() / 1000;
         originalAngle = mc.player.getYaw();
-        if (!Modules.get().isActive(ElytraBoostPlus.class)) {
-            if (autoEnableElytraBoost.get()) {
-                Modules.get().get(ElytraBoostPlus.class).fixYaw.set(false); // TODO set this to elytra utils or something.
-                Modules.get().get(ElytraBoostPlus.class).toggle();
+        if (!Modules.get().isActive(ElytraExtras.class)) {
+            if (autoEnableElytraExtras.get()) {
+                Modules.get().get(ElytraExtras.class).fixYaw.set(false);
+                Modules.get().get(ElytraExtras.class).toggle();
             } else {
-                warning("You don't have ElytraBoostPlus enabled, consider enabling it.");
+                warning("You don't have ElytraExtras enabled, consider enabling it.");
             }
         }
 
@@ -308,7 +356,7 @@ public class ChunkTrailer extends Module {
     @Override
     public void onDeactivate() {
         assert mc.player != null;
-        if (flightStats.get()) {
+        if (flightStats.get() && !disconnected) {
             showStats();
         }
         if (replayMode.get() != ReplayMode.Load) {
@@ -318,8 +366,11 @@ public class ChunkTrailer extends Module {
                 error("Unable to save replay.");
             }
         }
-        if (autoEnableElytraBoost.get() && Modules.get().isActive(ElytraBoostPlus.class)) Modules.get().get(ElytraBoostPlus.class).toggle();
+        if (autoEnableElytraExtras.get() && Modules.get().isActive(ElytraExtras.class)) Modules.get().get(ElytraExtras.class).toggle();
         waypoints.clear();
+
+        disconnected = false;
+        nextWaypointNumber = 0;
     }
 
     @EventHandler(priority = EventPriority.HIGH)
@@ -342,6 +393,7 @@ public class ChunkTrailer extends Module {
         if (replayMode.get() == ReplayMode.Save) return;
         if (replayMode.get() == ReplayMode.Load && nextWaypointNumber >= waypoints.size()) {
             toggle();
+            nextWaypointNumber = 0;
             return;
         }
         Waypoint objectiveWaypoint = waypoints.get(nextWaypointNumber);
@@ -376,6 +428,32 @@ public class ChunkTrailer extends Module {
                         waypoints.get(waypoint).x + deltaDistance.get(), waypoints.get(waypoint).y + deltaDistance.get(), waypoints.get(waypoint).z + deltaDistance.get(), sideColorBox.get(), sideColorBox.get(), ShapeMode.Sides, 0);
                 }
             }
+        }
+    }
+
+    @EventHandler(
+        priority = -200
+    )
+    private void onGameDisconnected(GameLeftEvent event) {
+        if (disableOnDisconnect.get()) {
+            disconnected = true;
+            this.toggle();
+        }
+    }
+
+/*
+    @EventHandler
+    private void onGameLeft(GameLeftEvent event) {
+        if (this.disableOnDisconnect.get()) {
+            this.toggle();
+        }
+    }
+ */
+
+    @EventHandler
+    private void onDamage(DamageEvent event) {
+        if (this.disableOnDamage.get()) {
+            this.toggle();
         }
     }
 

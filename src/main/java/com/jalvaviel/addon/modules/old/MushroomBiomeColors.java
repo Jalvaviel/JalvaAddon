@@ -1,4 +1,4 @@
-package com.jalvaviel.addon.modules;
+package com.jalvaviel.addon.modules.old;
 
 import com.jalvaviel.addon.Addon;
 import meteordevelopment.meteorclient.settings.BoolSetting;

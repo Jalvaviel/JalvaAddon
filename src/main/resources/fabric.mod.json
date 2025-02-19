@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "jalva-addon",
-  "version": "0.6+mc1.21.1",
+  "version": "0.7+mc1.21.1",
   "name": "JalvaAddon",
   "description": "Random modules made by Jalvaviel.",
   "authors": [
@@ -25,7 +25,7 @@
   },
   "accessWidener": "jalvaaddon.accesswidener",
   "depends": {
-    "java": ">=17",
+    "java": ">=21",
     "minecraft": ">=1.21.1",
     "meteor-client": "*"
   }
