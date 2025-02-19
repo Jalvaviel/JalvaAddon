@@ -2,34 +2,30 @@
 
 This is an addon for Meteor Client in Minecraft.
 
-## Release 0.6 of JalvaAddon
+## Release 0.7 of JalvaAddon
 
-### Biome Color Changer:
+### Biome Color Changer (WIP):
 - Lets you change the water color, sky color, foliage color and grass color of the biomes in-game.
 - Has a default color config and a biome specific color config.
 
 ### Chunk Trailer
-- Lets you generate chunk trails with elytra.
-- Make replays of the flight trajectories and repeat them later.
-- Change the angle of deviation from the player's camera to generate random waypoints.
-- Change the waypoint distance generation.
-- See the flight stats in-game after finishing the chunk trail.
-- Let's you see the waypoints in-game with an overlay.
+- Lets you generate random chunk trails with elytra or save a manual replay with custom checkpoints.
+- You can manage flight files in the `meteor-client/trail-replays` folder.
+- The **Generate** mode lets you change the angle of deviation from the player's camera and distance to generate random checkpoints in the overworld.
+- The **Save** mode lets you place custom checkpoints with a hotkey and is nether compatible.
+- The **Load** mode lets you replay a file from the nearest checkpoint to the player, and also on reverse mode among other settings.
 
-### Elytra Boost +
-- Meteors boost sucks ass, so I ""borrowed"" Thunderhack's implementation for 2b2t.
-- Boost by pressing the spacebar or let the module boost for you.
-- Set a certain height and upwards speed as an autopilot.
-- Set a speed limit.
-- Auto recast and auto replace for elytra.
-
-### Fast Breaker
-- A little bit scuffed, but you can instamine blocks with a packet exploit.
-- Packet limiter and a mining threshold which can be modified.
+### Elytra Utils
+- Auxiliary module for Chunk Trailer, but can also be used as a standalone one.
+- Has some ElytraFly utils such as elytra recast, automatic use of rockets, elytra replace, etc.
+- Also includes a speedometer.
 
 ### Map Boundaries
-- Highlights the map region boundaries in-game. I used it to delimit plots on MAI5.
-- Change the color of the highlight.
+- Highlights the map region boundaries in-game. Useful for making map art machines/plots.
+- You can change the color of the highlight.
+
+### Block Replacer
+- It places blocks from your inventory in a certain position. Useful when using feed tapes / conveyors.
 
 ## Contribute:  
 
