@@ -1,26 +1,18 @@
 package com.jalvaviel.addon.ChunkTrailer;
 
-import meteordevelopment.meteorclient.utils.Utils;
-import meteordevelopment.meteorclient.utils.player.PlayerUtils;
-import meteordevelopment.meteorclient.utils.world.Dimension;
-
 import net.minecraft.util.math.Vec3d;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
 
-import static com.jalvaviel.addon.Addon.LOG;
 import static com.jalvaviel.addon.ChunkTrailer.FlightMetadata.REPLAY_VERSION;
-import static com.jalvaviel.addon.ChunkTrailer.WaypointUtils.*;
+import static com.jalvaviel.addon.utils.WaypointUtils.*;
 import static java.lang.Math.cos;
 import static java.lang.Math.sin;
-import static meteordevelopment.meteorclient.MeteorClient.mc;
 
 public class FlightData {
     private FlightMetadata flightMetadata;

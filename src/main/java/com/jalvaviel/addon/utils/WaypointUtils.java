@@ -1,24 +1,14 @@
-package com.jalvaviel.addon.ChunkTrailer;
+package com.jalvaviel.addon.utils;
 
 
-import com.jalvaviel.addon.modules.ChunkTrailer;
+import com.jalvaviel.addon.ChunkTrailer.FlightData;
+import com.jalvaviel.addon.ChunkTrailer.ReplayMode;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.time.temporal.TemporalAmount;
 import java.util.ArrayList;
-import java.util.Date;
-import java.util.Objects;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
 
-import static java.lang.Math.*;
 import static meteordevelopment.meteorclient.MeteorClient.mc;
-import meteordevelopment.meteorclient.utils.world.Dimension;
-import static com.jalvaviel.addon.Addon.LOG;
 
 public class WaypointUtils {
     public static final int NULL_Y_VALUE = -69420;

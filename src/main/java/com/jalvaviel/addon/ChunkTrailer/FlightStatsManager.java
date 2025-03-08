@@ -1,16 +1,10 @@
 package com.jalvaviel.addon.ChunkTrailer;
 
-import net.minecraft.util.math.Vec3d;
-
 import java.time.Duration;
-import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.concurrent.TimeUnit;
 
-import static com.jalvaviel.addon.ChunkTrailer.WaypointUtils.*;
-import static meteordevelopment.meteorclient.MeteorClient.mc;
+import static com.jalvaviel.addon.utils.WaypointUtils.*;
 import static meteordevelopment.meteorclient.utils.player.ChatUtils.info;
 
 public class FlightStatsManager {

@@ -4,6 +4,7 @@ package com.jalvaviel.addon.modules;
 import com.google.gson.JsonSyntaxException;
 import com.jalvaviel.addon.Addon;
 import com.jalvaviel.addon.ChunkTrailer.*;
+import com.jalvaviel.addon.utils.WaypointUtils;
 import meteordevelopment.meteorclient.events.entity.DamageEvent;
 import meteordevelopment.meteorclient.events.game.GameLeftEvent;
 import meteordevelopment.meteorclient.events.meteor.KeyEvent;
@@ -17,23 +18,18 @@ import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.utils.Utils;
 import meteordevelopment.meteorclient.utils.misc.Keybind;
 import meteordevelopment.meteorclient.utils.misc.input.KeyAction;
-import meteordevelopment.meteorclient.utils.player.PlayerUtils;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 
 import java.io.FileNotFoundException;
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
-import static com.jalvaviel.addon.ChunkTrailer.FlightMetadata.REPLAY_VERSION;
-import static com.jalvaviel.addon.ChunkTrailer.WaypointUtils.*;
-import static java.lang.Math.*;
+import static com.jalvaviel.addon.utils.WaypointUtils.*;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_GRAVE_ACCENT;
 
 public class ChunkTrailer extends Module{

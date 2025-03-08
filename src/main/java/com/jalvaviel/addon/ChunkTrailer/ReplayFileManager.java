@@ -4,12 +4,9 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import com.jalvaviel.addon.modules.ChunkTrailer;
-import meteordevelopment.meteorclient.utils.Utils;
 
-import meteordevelopment.meteorclient.utils.player.PlayerUtils;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.chunk.Chunk;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -26,7 +23,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.jalvaviel.addon.Addon.LOG;
-import static com.jalvaviel.addon.ChunkTrailer.WaypointUtils.NULL_Y_VALUE;
+import static com.jalvaviel.addon.utils.WaypointUtils.NULL_Y_VALUE;
 
 public class ReplayFileManager {
     private static final Path REPLAYS_PATH = FabricLoader.getInstance().getGameDir().resolve("meteor-client/trail-replays");
