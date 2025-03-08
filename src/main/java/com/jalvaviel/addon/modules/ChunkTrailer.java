@@ -1,10 +1,9 @@
 package com.jalvaviel.addon.modules;
 
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
 import com.jalvaviel.addon.Addon;
-import com.mojang.logging.LogUtils;
+import com.jalvaviel.addon.ChunkTrailer.*;
 import meteordevelopment.meteorclient.events.entity.DamageEvent;
 import meteordevelopment.meteorclient.events.game.GameLeftEvent;
 import meteordevelopment.meteorclient.events.meteor.KeyEvent;
@@ -18,43 +17,28 @@ import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.utils.Utils;
 import meteordevelopment.meteorclient.utils.misc.Keybind;
 import meteordevelopment.meteorclient.utils.misc.input.KeyAction;
+import meteordevelopment.meteorclient.utils.player.PlayerUtils;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.FileNotFoundException;
+import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Objects;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
 
+import static com.jalvaviel.addon.ChunkTrailer.FlightMetadata.REPLAY_VERSION;
+import static com.jalvaviel.addon.ChunkTrailer.WaypointUtils.*;
 import static java.lang.Math.*;
 import static org.lwjgl.glfw.GLFW.GLFW_KEY_GRAVE_ACCENT;
 
 public class ChunkTrailer extends Module{
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
     private final SettingGroup sgRender = settings.createGroup("Render");
-
-    private enum ReplayMode {
-        Generate,
-        Save,
-        Load
-    }
-
-    private enum LoadMode {
-        All,
-        Resume,
-        Nearest
-    }
 
 
     public ChunkTrailer() {
@@ -81,8 +65,8 @@ public class ChunkTrailer extends Module{
         .name("replay")
         .description("Select a replay file.")
         .visible(() -> replayMode.get() == ReplayMode.Load)
-        .supplier(ChunkTrailer::getReplayFiles)
-        .defaultValue("")
+        .supplier(ReplayFileManager::getReplayFiles)
+        .defaultValue(EMPTY_REPLAY_FOLDER_STRING)
         .build()
     );
 
@@ -90,7 +74,7 @@ public class ChunkTrailer extends Module{
         .name("load-mode")
         .description("Selects which checkpoint to start from.")
         .visible(() -> replayMode.get() == ReplayMode.Load)
-        .defaultValue(LoadMode.Resume)
+        .defaultValue(LoadMode.All)
         .build()
     );
 
@@ -152,13 +136,6 @@ public class ChunkTrailer extends Module{
         .build()
     );
 
-    private final Setting<Boolean> disableOnDisconnect = sgGeneral.add(new BoolSetting.Builder()
-        .name("disable-on-disconnect")
-        .description("Disables this module when disconnecting or getting kicked.")
-        .defaultValue(true)
-        .build()
-    );
-
     private final Setting<Boolean> disableOnDamage = sgGeneral.add(new BoolSetting.Builder()
         .name("disable-on-damage")
         .description("Disables this module when receiving damage.")
@@ -204,229 +181,157 @@ public class ChunkTrailer extends Module{
         .build()
     );
 
-    ArrayList<Waypoint> waypoints = new ArrayList<>();
-    int nextWaypointNumber = 0;
-    long startEpochTime;
-    float originalAngle;
-    boolean disconnected = false;
+    private FlightData currentFlightData;
+    private String flightFilename;
+    private float originalAngle;
+    private Vec3d currentWaypoint;
+    private int currentWaypointIndex;
+    private int firstWaypointIndex;
+    private LocalTime startTime;
+    boolean exception = false;
+    public static final String EMPTY_REPLAY_FOLDER_STRING = "No replays found.";
 
-    private static String[] getReplayFiles() {
+    private void instantiateFlightData() {
+        startTime = LocalTime.now();
+        switch (replayMode.get()) {
+            case ReplayMode.Generate:
+                originalAngle = mc.player.getYaw();
+                currentFlightData = new FlightData(FlightMetadata.genDummyMetadata(ReplayMode.Generate), new ArrayList<>());
+                currentFlightData.addWaypoint(new Vec3d(mc.player.getX(), NULL_Y_VALUE, mc.player.getZ())); //generateWaypoint(searchAngle.get(),originalAngle,1,1);
+                currentWaypointIndex = 0;
+                currentWaypoint = currentFlightData.getWaypoints().get(currentWaypointIndex);
+                // TODO test if it can generate the next waypoint onTick instead of here
+                break;
+            case Save:
+                currentFlightData = new FlightData(FlightMetadata.genDummyMetadata(ReplayMode.Save), new ArrayList<>());
+                break;
+            case Load:
+                handleFileLoad();
+                break;
+        }
+    }
+
+    private void handleFileLoad() {
         try {
-            Path replaysPath = FabricLoader.getInstance().getGameDir().resolve("meteor-client/trail-replays");
-            if (Files.notExists(replaysPath)) return new String[0];
-            return Files.list(replaysPath)
-                .filter(path -> path.getFileName().toString().endsWith(".json"))
-                .map(path -> path.getFileName().toString())
-                .toArray(String[]::new);
-        } catch (IOException e) {
-            LogUtils.getLogger().error("Couldn't retrieve replay files.", e);
-        }
-        return new String[0];
-    }
-
-    private float generateNextYaw() {
-        assert mc.player != null;
-        return angleOverlap.get() ? ThreadLocalRandom.current().nextFloat(originalAngle-searchAngle.get(), originalAngle+searchAngle.get())
-        : ThreadLocalRandom.current().nextFloat(mc.player.getYaw()-searchAngle.get(), mc.player.getYaw()+searchAngle.get());
-    }
-
-    private float generateNextDistance() {
-        assert mc.player != null;
-        if (Objects.equals(maxDistance.get(), minDistance.get())) return minDistance.get();
-        return ThreadLocalRandom.current().nextFloat(Math.min(minDistance.get(), maxDistance.get()), Math.max(minDistance.get(), maxDistance.get()));
-    }
-
-    private void saveReplay() throws IOException {
-        assert mc.world != null;
-        Path replaysPath = FabricLoader.getInstance().getGameDir().resolve("meteor-client/trail-replays");
-        if (Files.notExists(replaysPath)) Files.createDirectory(replaysPath);
-
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        //String dimension = mc.world.getRegistryKey().getValue().toString();
-        String worldName = Utils.getWorldName().replaceAll("[<>:\"/\\\\|?*]","_");
-        String date = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm"));
-
-        String filePath = replaysPath + "/" + worldName + "(" + date + ")" + ".json";
-        FileWriter writer = new FileWriter(filePath);
-        gson.toJson(waypoints, writer);
-        writer.close();
-    }
-
-    private void loadReplay(String filename) throws IOException {
-        if (!filename.contains(".json")) return;
-        waypoints.clear();
-        Path replaysPath = FabricLoader.getInstance().getGameDir().resolve("meteor-client/trail-replays");
-        if (Files.notExists(replaysPath)) Files.createDirectory(replaysPath);
-        Gson gson = new Gson();
-        FileReader reader = new FileReader(replaysPath.resolve(filename).toFile());
-        Waypoint[] waypointList = gson.fromJson(reader, Waypoint[].class);
-        for (Waypoint waypoint : waypointList) {
-            if (rewind.get()) waypoints.addFirst(new Waypoint(waypoint.x, waypoint.y, waypoint.z));
-            else waypoints.add(new Waypoint(waypoint.x, waypoint.y, waypoint.z));
-        }
-        reader.close();
-        if (loadMode.get() == LoadMode.All) nextWaypointNumber = 0;
-        if (loadMode.get() == LoadMode.Nearest) nextWaypointNumber = getNearestCheckpoint();
-        info("Loaded " + waypoints.size() + " waypoints.");
-        info("First waypoint " + nextWaypointNumber + " " + waypoints.get(nextWaypointNumber).getWaypoint());
-    }
-
-    private int getNearestCheckpoint() {
-        assert mc.player != null;
-        if (waypoints.isEmpty() || waypoints.size() == 1) {
-            return 0;
-        }
-        Vec3d playerPos = mc.player.getPos();
-        float minDistance = (float) waypoints.get(0).getWaypoint().distanceTo(playerPos);
-        int nearestIndex = 0;
-        for (int index = 1; index < waypoints.size(); index++) {
-            float distance = (float) waypoints.get(index).getWaypoint().distanceTo(playerPos);
-            if (distance < minDistance) {
-                minDistance = distance;
-                nearestIndex = index;
+            exception = false;
+            currentFlightData = ReplayFileManager.loadReplay(replay.get(), rewind.get());
+        } catch (JsonSyntaxException jsonSyntaxException){
+            warning("This replay might be using an older format, trying to convert...");
+            try {
+                currentFlightData = ReplayFileManager.convertOldReplay(replay.get());
+                warning("Replay converted successfully.");
+            } catch (Exception ex) {
+                error("Couldn't convert the replay, maybe it's corrupted. (highlight)Stopping.");
+                exception = true;
             }
+        } catch (FileNotFoundException fileNotFoundException) {
+            warning("Empty replay folder. (highlight)Stopping.");
+            exception = true;
+        } catch (Exception e) {
+            error("Couldn't load the replay, maybe it's corrupted or has the wrong permissions. (highlight)Stopping.");
+            exception = true;
+        } finally {
+            if (!exception) {
+                if (loadMode.get() == LoadMode.Nearest)
+                    currentWaypointIndex = WaypointUtils.getNearestWaypoint(currentFlightData.getWaypoints());
+                else currentWaypointIndex = 0;
+                firstWaypointIndex = currentWaypointIndex;
+                currentWaypoint = currentFlightData.getWaypoints().get(currentWaypointIndex);
+            } else toggle();
         }
-        return nearestIndex;
     }
 
-    private void showStats() {
-        assert mc.player != null;
-        if (replayMode.get() == ReplayMode.Load && !replay.get().contains(".json") ) { return;}
-        long timeElapsed = (System.currentTimeMillis() / 1000) - startEpochTime;
-        long hours = TimeUnit.SECONDS.toHours(timeElapsed);
-        long minutes = TimeUnit.SECONDS.toMinutes(timeElapsed) - TimeUnit.HOURS.toMinutes(TimeUnit.SECONDS.toHours(timeElapsed));
-        long seconds = timeElapsed - TimeUnit.MINUTES.toSeconds(TimeUnit.SECONDS.toMinutes(timeElapsed));
-        double distance = getCumulativeDistance();
-
-        info("(highlight)Total Waypoints: "+"%d",waypoints.size());
-        info("(highlight)Absolute distance: "+"%d blocks.",nextWaypointNumber > 0 ? (int) waypoints.getFirst().horizontalDistanceTo(mc.player.getPos()) : 0);
-        info("(highlight)Cumulative distance: "+"%d blocks.",(int) distance);
-        info("(highlight)Time elapsed: "+"%dh %dm %ds",hours,minutes,seconds);
-    }
-
-    private double getCumulativeDistance() {
-        double distance = 0;
-        assert mc.player != null;
-        if (nextWaypointNumber > 1) {
-            for (int i = 0; i < nextWaypointNumber - 1; i++) {
-                Waypoint waypoint1 = waypoints.get(i);
-                Waypoint waypoint2 = waypoints.get(i + 1);
-                distance += waypoint1.horizontalDistanceTo(new Vec3d(waypoint2.x, 0, waypoint2.z));
-            }
-            distance += waypoints.get(nextWaypointNumber-1).horizontalDistanceTo(mc.player.getPos());
+    private void handleFileSave() {
+        try {
+            String worldName = Utils.getWorldName().replaceAll("[<>:\"/\\\\|?*]", "_");
+            String date = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss"));
+            String filename = worldName + "(" + date + ")";
+            currentFlightData.updateMetadata(startTime, date);
+            //if (currentFlightData.getFlightMetadata().mode() == ReplayMode.Generate) currentFlightData.getWaypoints().removeLast();
+            ReplayFileManager.saveReplay(currentFlightData, filename);
+            flightFilename = filename;
+        } catch (IndexOutOfBoundsException e) {
+            if (e.getMessage().contains("Index 0 out of bounds for length 0"))
+                warning("Couldn't save the replay, since there aren't any waypoints. (highlight)Stopping.");
+        } catch (Exception e) {
+            error("Couldn't save the replay, maybe the directory hasn't got enough permissions. (highlight)Stopping.");
         }
-        if (nextWaypointNumber == 1) {
-            distance += waypoints.getFirst().horizontalDistanceTo(mc.player.getPos());
-        }
-        return distance;
     }
 
     @Override
     public void onActivate() {
         assert mc.player != null;
-        if (loadMode.get() == LoadMode.All) nextWaypointNumber = 0;
-        if (loadMode.get() == LoadMode.Nearest) nextWaypointNumber = getNearestCheckpoint();
-        startEpochTime = System.currentTimeMillis() / 1000;
-        originalAngle = mc.player.getYaw();
-        if (!Modules.get().isActive(ElytraExtras.class)) {
-            if (autoEnableElytraExtras.get()) {
-                Modules.get().get(ElytraExtras.class).fixYaw.set(false);
-                Modules.get().get(ElytraExtras.class).toggle();
-            } else {
-                warning("You don't have ElytraExtras enabled, consider enabling it.");
-            }
-        }
-
-        if (replayMode.get() == ReplayMode.Generate){
-            Waypoint origin = new Waypoint(mc.player.getX(), -69420, mc.player.getZ());
-            waypoints.add(origin);
-            waypoints.add(origin.generateNextWaypoint(generateNextYaw(), generateNextDistance()));
-            nextWaypointNumber = waypoints.size()-1;
-        }
-        if (replayMode.get() == ReplayMode.Load){
-            try { loadReplay(replay.get()); } catch (IOException ignored) {}
-        }
-        if (replayMode.get() == ReplayMode.Save){
-            Waypoint origin = new Waypoint(mc.player.getX(), mc.player.getY(), mc.player.getZ());
-            waypoints.add(origin);
-            nextWaypointNumber = waypoints.size()-1;
+        instantiateFlightData();
+        if (!autoEnableElytraExtras.get()) warning("You don't have ElytraExtras enabled, consider enabling it.");
+        if (!Modules.get().isActive(ElytraExtras.class) && autoEnableElytraExtras.get()) {
+            Modules.get().get(ElytraExtras.class).fixYaw.set(false);
+            Modules.get().get(ElytraExtras.class).toggle();
         }
     }
 
     @Override
     public void onDeactivate() {
-        assert mc.player != null;
-        if (flightStats.get() && !disconnected) {
-            showStats();
-        }
-        if (replayMode.get() != ReplayMode.Load) {
-            try {
-                saveReplay();
-            } catch (IOException e) {
-                error("Unable to save replay.");
+        if (exception) return;
+        try {
+            if (replayMode.get() != ReplayMode.Load) handleFileSave();
+            if (flightStats.get()) {
+                if (replayMode.get() != ReplayMode.Load) {
+                    FlightStatsManager.showMetadata(flightFilename, currentFlightData.getFlightMetadata());
+                } else {
+                    FlightStatsManager.showCurrentStats(startTime, firstWaypointIndex, currentWaypointIndex, currentFlightData);
+                }
             }
-        }
-        if (autoEnableElytraExtras.get() && Modules.get().isActive(ElytraExtras.class)) Modules.get().get(ElytraExtras.class).toggle();
-        waypoints.clear();
-
-        disconnected = false;
-        nextWaypointNumber = 0;
+            if (Modules.get().isActive(ElytraExtras.class) && autoEnableElytraExtras.get())
+                Modules.get().get(ElytraExtras.class).toggle();
+        } catch (Exception ignored) {}
     }
+
 
     @EventHandler(priority = EventPriority.HIGH)
     private void onKey(KeyEvent event) {
-        assert mc.player != null;
         if (event.action == KeyAction.Release) return;
-        if (event.key == saveWaypoint.get().getValue()) waypoints.add(new Waypoint(mc.player.getX(), mc.player.getY(), mc.player.getZ()));
+        if (event.key == saveWaypoint.get().getValue() && replayMode.get() == ReplayMode.Save) currentFlightData.addWaypoint(mc.player.getPos());
     }
 
     @EventHandler(priority = EventPriority.HIGH)
     private void onMouseButton(MouseButtonEvent event) {
-        assert mc.player != null;
         if (event.action == KeyAction.Release) return;
-        if (event.button == saveWaypoint.get().getValue()) waypoints.add(new Waypoint(mc.player.getX(), mc.player.getY(), mc.player.getZ()));
+        if (event.button == saveWaypoint.get().getValue() && replayMode.get() == ReplayMode.Save) currentFlightData.addWaypoint(mc.player.getPos());
     }
 
     @EventHandler
     private void onTick(TickEvent.Pre event) {
-        assert mc.player != null;
         if (replayMode.get() == ReplayMode.Save) return;
-        if (replayMode.get() == ReplayMode.Load && nextWaypointNumber >= waypoints.size()) {
-            toggle();
-            nextWaypointNumber = 0;
-            return;
+        Vec3d playerPos = mc.player.getPos();
+        double distanceToWaypoint = (currentFlightData.getFlightMetadata().mode() == ReplayMode.Save) ? currentWaypoint.distanceTo(playerPos) : getHorizontalDistance(currentWaypoint,playerPos);
+        if (distanceToWaypoint < deltaDistance.get()) {
+            if (replayMode.get() == ReplayMode.Generate) {
+                if (angleOverlap.get()) currentFlightData.generateWaypoint(searchAngle.get(),originalAngle,minDistance.get(),maxDistance.get());
+                else currentFlightData.generateWaypoint(searchAngle.get(),mc.player.getYaw(),minDistance.get(),maxDistance.get());
+            }
+            if (replayMode.get() == ReplayMode.Load && currentWaypointIndex+1 >= currentFlightData.getWaypoints().size()) { // currentFlightData.getFlightMetadata().totalWaypoints() Failsafe in case the file's totalWaypoints is not the same as the real amount.
+                toggle();
+                return;
+            }
+            currentWaypointIndex++;
+            currentWaypoint = currentFlightData.getWaypoints().get(currentWaypointIndex);
         }
-        Waypoint objectiveWaypoint = waypoints.get(nextWaypointNumber);
-        double distanceTo = objectiveWaypoint.y == -69420 ? objectiveWaypoint.horizontalDistanceTo(mc.player.getPos()) : objectiveWaypoint.getWaypoint().distanceTo(mc.player.getPos());
-        if (distanceTo < deltaDistance.get()){
-            if (replayMode.get() == ReplayMode.Generate) waypoints.add(objectiveWaypoint.generateNextWaypoint(generateNextYaw(), generateNextDistance()));
-            nextWaypointNumber++;
-        } else {
-            objectiveWaypoint.lookAtWaypoint();
-        }
+        lookAtWaypoint(currentWaypoint);
     }
 
     @EventHandler
     private void onRender(Render3DEvent event) {
         if (renderWaypoints.get()) {
-            assert mc.world != null;
             if (occlusionCulling.get()) {
                 event.renderer.triangles.depthTest = true;
                 event.renderer.lines.depthTest = true;
             }
-            for (int waypoint = 0; waypoint < waypoints.size(); waypoint++) {
-                boolean isNext = waypoint == nextWaypointNumber;
-                if (!isNext) {
-                    event.renderer.box(waypoints.get(waypoint).x - 0.25, mc.world.getBottomY(), waypoints.get(waypoint).z - 0.25,
-                        waypoints.get(waypoint).x + 0.25, mc.world.getTopY(), waypoints.get(waypoint).z + 0.25, prevSideColorBox.get(), prevSideColorBox.get(), ShapeMode.Sides, 0);
-                    event.renderer.box(waypoints.get(waypoint).x - deltaDistance.get(), waypoints.get(waypoint).y - deltaDistance.get(), waypoints.get(waypoint).z - deltaDistance.get(),
-                        waypoints.get(waypoint).x + deltaDistance.get(), waypoints.get(waypoint).y + deltaDistance.get(), waypoints.get(waypoint).z + deltaDistance.get(), prevSideColorBox.get(), prevSideColorBox.get(), ShapeMode.Sides, 0);
-                } else {
-                    event.renderer.box(waypoints.get(waypoint).x - 0.25, mc.world.getBottomY(), waypoints.get(waypoint).z - 0.25,
-                        waypoints.get(waypoint).x + 0.25, mc.world.getTopY(), waypoints.get(waypoint).z + 0.25, sideColorBox.get(), sideColorBox.get(), ShapeMode.Sides, 0);
-                    event.renderer.box(waypoints.get(waypoint).x - deltaDistance.get(), waypoints.get(waypoint).y - deltaDistance.get(), waypoints.get(waypoint).z - deltaDistance.get(),
-                        waypoints.get(waypoint).x + deltaDistance.get(), waypoints.get(waypoint).y + deltaDistance.get(), waypoints.get(waypoint).z + deltaDistance.get(), sideColorBox.get(), sideColorBox.get(), ShapeMode.Sides, 0);
-                }
+            for (int waypoint = 0; waypoint < currentFlightData.getWaypoints().size(); waypoint++) {
+                SettingColor color = (waypoint == currentWaypointIndex) ? sideColorBox.get() : prevSideColorBox.get();
+                event.renderer.box(currentFlightData.getWaypoints().get(waypoint).x - 0.25, mc.world.getBottomY(), currentFlightData.getWaypoints().get(waypoint).z - 0.25,
+                    currentFlightData.getWaypoints().get(waypoint).x + 0.25, mc.world.getTopY(), currentFlightData.getWaypoints().get(waypoint).z + 0.25, color, color, ShapeMode.Sides, 0);
+                event.renderer.box(currentFlightData.getWaypoints().get(waypoint).x - deltaDistance.get(), currentFlightData.getWaypoints().get(waypoint).y - deltaDistance.get(), currentFlightData.getWaypoints().get(waypoint).z - deltaDistance.get(),
+                    currentFlightData.getWaypoints().get(waypoint).x + deltaDistance.get(), currentFlightData.getWaypoints().get(waypoint).y + deltaDistance.get(), currentFlightData.getWaypoints().get(waypoint).z + deltaDistance.get(), color, color, ShapeMode.Sides, 0);
             }
         }
     }
@@ -435,20 +340,9 @@ public class ChunkTrailer extends Module{
         priority = -200
     )
     private void onGameDisconnected(GameLeftEvent event) {
-        if (disableOnDisconnect.get()) {
-            disconnected = true;
-            this.toggle();
-        }
+        info("Disconnecting and saving file...");
+        toggle();
     }
-
-/*
-    @EventHandler
-    private void onGameLeft(GameLeftEvent event) {
-        if (this.disableOnDisconnect.get()) {
-            this.toggle();
-        }
-    }
- */
 
     @EventHandler
     private void onDamage(DamageEvent event) {
@@ -456,75 +350,5 @@ public class ChunkTrailer extends Module{
             this.toggle();
         }
     }
-
-    private class Waypoint {
-        double x, y, z;
-
-        protected Waypoint(double x, double y, double z) {
-            this.x = x;
-            this.y = y;
-            this.z = z;
-        }
-
-        public Vec3d getWaypoint() { return new Vec3d(x, y, z); }
-
-        protected void lookAtWaypoint() {
-            assert mc.player != null;
-            //mc.player.lookAt(mc.player.getCommandSource().getEntityAnchor(), getWaypoint());
-            if (y == -69420) {
-                Vec3d vec3d = mc.player.getPos();
-                double d = this.x - vec3d.x;
-                double f = this.z - vec3d.z;
-                mc.player.setYaw(MathHelper.wrapDegrees((float) (MathHelper.atan2(f, d) * 57.2957763671875) - 90.0F));
-                mc.player.prevYaw = mc.player.getYaw();
-            } else {
-                mc.player.lookAt(mc.player.getCommandSource().getEntityAnchor(), getWaypoint());
-            }
-        }
-
-        protected Waypoint generateNextWaypoint(float yaw, double distance) {
-            assert mc.player != null;
-            double dx = -sin(Math.toRadians(yaw)) * distance;
-            double dz = cos(Math.toRadians(yaw)) * distance;
-            return new Waypoint(this.x + dx, -69420, this.z + dz);
-        }
-
-        protected double horizontalDistanceTo(Vec3d vec) {
-            double d = vec.x - this.x;
-            double f = vec.z - this.z;
-            return Math.sqrt(d * d + f * f);
-        }
-
-        public String toString(){
-            return "X: " + (int) this.x + ", Z: " + (int) this.z;
-        }
-    }
 }
 
-/*
-@EventHandler
-    private void onTick(TickEvent.Pre event) {
-        assert mc.player != null;
-        if (replayMode.get() == ReplayMode.Save) {
-            Waypoint objectiveWaypoint = waypoints.getLast();
-            if (objectiveWaypoint.distanceTo(mc.player.getPos()) < deltaDistance.get()){
-                waypoints.add(objectiveWaypoint.generateNextWaypoint(generateNextYaw(), generateNextDistance()));
-                nextWaypointNumber++;
-            } else {
-                objectiveWaypoint.lookAtWaypoint();
-            }
-        }
-        if (replayMode.get() == ReplayMode.Load) {
-            if (nextWaypointNumber >= waypoints.size()) {
-                toggle();
-                return;
-            }
-            Waypoint objectiveWaypoint = waypoints.get(nextWaypointNumber);
-            if (objectiveWaypoint.distanceTo(mc.player.getPos()) < deltaDistance.get()){
-                nextWaypointNumber++;
-            } else {
-                objectiveWaypoint.lookAtWaypoint();
-            }
-        }
-    }
- */
