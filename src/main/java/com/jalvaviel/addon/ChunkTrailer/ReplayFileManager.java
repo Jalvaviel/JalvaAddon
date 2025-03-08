@@ -75,8 +75,4 @@ public class ReplayFileManager {
         }
         return new String[]{"No replays found."};
     }
-
-    private record OldWaypoint(double x, double y, double z){
-        private Vec3d toVector() { return new Vec3d(x,y,z); }
-    }
 }

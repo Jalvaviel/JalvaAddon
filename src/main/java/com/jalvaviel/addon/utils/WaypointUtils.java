@@ -33,7 +33,7 @@ public class WaypointUtils {
 
     public static int getNearestWaypoint(ArrayList<Vec3d> waypoints) {
         if (waypoints.isEmpty() || waypoints.size() == 1) return 0;
-        double minDistance = waypoints.get(0).distanceTo(mc.player.getPos());
+        double minDistance = waypoints.getFirst().distanceTo(mc.player.getPos());
         int nearestIndex = 0;
         for (int index = 1; index < waypoints.size(); index++) {
             double distance = waypoints.get(index).distanceTo(mc.player.getPos());
