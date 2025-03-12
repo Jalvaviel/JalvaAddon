@@ -104,19 +104,23 @@ public class ElytraExtras extends Module {
         .build()
     );
 
+    /* DEPRECATED, Meteor has a built in speedometer.
     public final Setting<Boolean> speedometer = sgRender.add(new BoolSetting.Builder()
         .name("speedometer")
         .description("Displays a speedometer.")
         .defaultValue(true)
         .build()
     );
+     */
 
+    /*
     public final Setting<SettingColor> speedColor = sgRender.add(new ColorSetting.Builder()
         .name("Speed Color")
         .description("Color for the speedometer.")
         .defaultValue(Color.WHITE)
         .build()
     );
+     */
 
     private void replaceElytra() {
         if (doReplaceElytra.get()) {
@@ -187,6 +191,7 @@ public class ElytraExtras extends Module {
 
     @EventHandler
     private void onRender2D(Render2DEvent event) {
+        /* DEPRECATED, Meteor has a built in speedometer.
         if (speedometer.get() && this.isActive()) {
             String speed = String.format("Speed: %.3f b/s",currentPlayerSpeed);
             double dx =  (mc.getWindow().getFramebufferWidth()-speedRenderer.getWidth(speed))/2;
@@ -194,5 +199,6 @@ public class ElytraExtras extends Module {
             double dy = mc.getWindow().getFramebufferHeight()-(paddingDy*mc.getWindow().getScaleFactor());
             speedRenderer.render(speed, dx, dy, speedColor.get(), false);
         }
+         */
     }
 }

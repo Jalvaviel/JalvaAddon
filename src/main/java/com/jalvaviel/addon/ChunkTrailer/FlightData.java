@@ -9,17 +9,17 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.concurrent.ThreadLocalRandom;
 
-import static com.jalvaviel.addon.ChunkTrailer.FlightMetadata.REPLAY_VERSION;
+import static com.jalvaviel.addon.ChunkTrailer.FlightStats.REPLAY_VERSION;
 import static com.jalvaviel.addon.utils.WaypointUtils.*;
 import static java.lang.Math.cos;
 import static java.lang.Math.sin;
 
-public class FlightData {
-    private FlightMetadata flightMetadata;
+public class FlightData implements IFlightData{
+    private FlightStats flightStats;
     private ArrayList<Vec3d> waypoints;
 
-    public FlightData(FlightMetadata flightMetadata, ArrayList<Vec3d> waypoints) {
-        this.flightMetadata = flightMetadata;
+    public FlightData(FlightStats flightStats, ArrayList<Vec3d> waypoints) {
+        this.flightStats = flightStats;
         this.waypoints = waypoints;
     }
 
@@ -42,20 +42,20 @@ public class FlightData {
         this.waypoints = waypoints;
     }
 
-    public FlightMetadata getFlightMetadata() {
-        return flightMetadata;
+    public FlightStats getFlightStats() {
+        return flightStats;
     }
 
-    public void setFlightMetadata(FlightMetadata flightMetadata) {
-        this.flightMetadata = flightMetadata;
+    public void setFlightStats(FlightStats flightStats) {
+        this.flightStats = flightStats;
     }
 
-    public void updateMetadata(LocalTime startTime, String date) {
+    public void updateStats(LocalTime startTime, String date) {
         String duration = LocalTime.MIDNIGHT.plus(Duration.between(startTime,LocalTime.now())).format(DateTimeFormatter.ofPattern("HH:mm:ss"));
-        double absoluteDistance = getAbsoluteDistance(0,this);
+        double absoluteDistance = getAbsoluteDistance(0,getWaypoints().size()-1, this);
         double cumulativeDistance = getCumulativeDistance(0, getWaypoints().size()-1, this);
-        setFlightMetadata(new FlightMetadata(REPLAY_VERSION, getFlightMetadata().dimension(),
-            getFlightMetadata().mode(), date, duration, getWaypoints().size(), absoluteDistance, cumulativeDistance));
+        setFlightStats(new FlightStats(REPLAY_VERSION, getFlightStats().dimension(),
+            getFlightStats().mode(), date, duration, getWaypoints().size(), absoluteDistance, cumulativeDistance));
     }
 }
 

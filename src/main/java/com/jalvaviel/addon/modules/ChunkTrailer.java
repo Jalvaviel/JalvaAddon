@@ -34,6 +34,7 @@ import static org.lwjgl.glfw.GLFW.GLFW_KEY_GRAVE_ACCENT;
 
 public class ChunkTrailer extends Module{
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
+    private final SettingGroup sgMode = settings.createGroup("Mode");
     private final SettingGroup sgRender = settings.createGroup("Render");
 
 
@@ -48,25 +49,26 @@ public class ChunkTrailer extends Module{
         .build()
     );
 
-    private final Setting<Integer> deltaDistance = sgGeneral.add(new IntSetting.Builder()
+    private final Setting<Integer> deltaDistance = sgMode.add(new IntSetting.Builder()
         .name("delta-distance")
         .description("The distance threshold of a waypoint.")
         .defaultValue(3)
-        .visible(() -> replayMode.get() != ReplayMode.Save)
+        .visible(() -> replayMode.get() == ReplayMode.Load)
         .sliderRange(1,20)
+        .min(1)
         .build()
     );
 
-    private final Setting<String> replay = sgGeneral.add(new ProvidedStringSetting.Builder()
+    private final Setting<String> replay = sgMode.add(new ProvidedStringSetting.Builder()
         .name("replay")
         .description("Select a replay file.")
         .visible(() -> replayMode.get() == ReplayMode.Load)
         .supplier(ReplayFileManager::getReplayFiles)
-        .defaultValue(EMPTY_REPLAY_FOLDER_STRING)
+        .defaultValue(SELECT_REPLAY_STRING)
         .build()
     );
 
-    private final Setting<LoadMode> loadMode = sgGeneral.add(new EnumSetting.Builder<LoadMode>()
+    private final Setting<LoadMode> loadMode = sgMode.add(new EnumSetting.Builder<LoadMode>()
         .name("load-mode")
         .description("Selects which checkpoint to start from.")
         .visible(() -> replayMode.get() == ReplayMode.Load)
@@ -74,7 +76,7 @@ public class ChunkTrailer extends Module{
         .build()
     );
 
-    private final Setting<Boolean> rewind = sgGeneral.add(new BoolSetting.Builder()
+    private final Setting<Boolean> rewind = sgMode.add(new BoolSetting.Builder()
         .name("rewind")
         .description("Does the trail backwards.")
         .defaultValue(false)
@@ -82,34 +84,38 @@ public class ChunkTrailer extends Module{
         .build()
     );
 
-    private final Setting<Integer> searchAngle = sgGeneral.add(new IntSetting.Builder()
+    private final Setting<Integer> searchAngle = sgMode.add(new IntSetting.Builder()
         .name("search-angle")
         .description("The angle deviation from the player's current yaw.")
         .defaultValue(20)
-        .sliderRange(1,180)
+        .sliderRange(0,180)
+        .max(180)
+        .min(0)
         .visible(() -> replayMode.get() == ReplayMode.Generate)
         .build()
     );
 
-    private final Setting<Integer> minDistance = sgGeneral.add(new IntSetting.Builder()
+    private final Setting<Integer> minDistance = sgMode.add(new IntSetting.Builder()
         .name("min-distance")
         .description("The minimum block distance to move the player before checking another spot.")
         .defaultValue(500)
         .sliderRange(10, 10000)
+        .min(10)
         .visible(() -> replayMode.get() == ReplayMode.Generate)
         .build()
     );
 
-    private final Setting<Integer> maxDistance = sgGeneral.add(new IntSetting.Builder()
+    private final Setting<Integer> maxDistance = sgMode.add(new IntSetting.Builder()
         .name("max-distance")
         .description("The maximum block distance to move the player before checking another spot.")
         .defaultValue(500)
+        .min(10)
         .sliderRange(10, 10000)
         .visible(() -> replayMode.get() == ReplayMode.Generate)
         .build()
     );
 
-    private final Setting<Boolean> angleOverlap = sgGeneral.add(new BoolSetting.Builder()
+    private final Setting<Boolean> angleOverlap = sgMode.add(new BoolSetting.Builder()
         .name("angle-overlap")
         .description("Generates the new facing angles from the original angle instead of the last one.")
         .defaultValue(true)
@@ -117,7 +123,7 @@ public class ChunkTrailer extends Module{
         .build()
     );
 
-    private final Setting<Keybind> saveWaypoint = sgGeneral.add(new KeybindSetting.Builder()
+    private final Setting<Keybind> saveWaypoint = sgMode.add(new KeybindSetting.Builder()
         .name("save-waypoint-keybind")
         .description("The keybind to save a waypoint.")
         .defaultValue(Keybind.fromKey(GLFW_KEY_GRAVE_ACCENT))
@@ -162,7 +168,7 @@ public class ChunkTrailer extends Module{
     );
 
     private final Setting<SettingColor> prevSideColorBox = sgRender.add(new ColorSetting.Builder()
-        .name("previous-line-color")
+        .name("previous-side-color")
         .description("The side color of the previous waypoints.")
         .defaultValue(new SettingColor(144,106,16, 100))
         .visible(renderWaypoints::get)
@@ -186,20 +192,20 @@ public class ChunkTrailer extends Module{
     private LocalTime startTime;
     boolean exception = false;
     public static final String EMPTY_REPLAY_FOLDER_STRING = "No replays found.";
+    public static final String SELECT_REPLAY_STRING = "Select a replay.";
 
     private void instantiateFlightData() {
         startTime = LocalTime.now();
         switch (replayMode.get()) {
             case ReplayMode.Generate:
                 originalAngle = mc.player.getYaw();
-                currentFlightData = new FlightData(FlightMetadata.genDummyMetadata(ReplayMode.Generate), new ArrayList<>());
+                currentFlightData = new FlightData(FlightStats.genDummyMetadata(ReplayMode.Generate), new ArrayList<>());
                 currentFlightData.addWaypoint(new Vec3d(mc.player.getX(), NULL_Y_VALUE, mc.player.getZ())); //generateWaypoint(searchAngle.get(),originalAngle,1,1);
                 currentWaypointIndex = 0;
                 currentWaypoint = currentFlightData.getWaypoints().get(currentWaypointIndex);
-                // TODO test if it can generate the next waypoint onTick instead of here
                 break;
             case Save:
-                currentFlightData = new FlightData(FlightMetadata.genDummyMetadata(ReplayMode.Save), new ArrayList<>());
+                currentFlightData = new FlightData(FlightStats.genDummyMetadata(ReplayMode.Save), new ArrayList<>());
                 break;
             case Load:
                 handleFileLoad();
@@ -221,7 +227,7 @@ public class ChunkTrailer extends Module{
                 exception = true;
             }
         } catch (FileNotFoundException fileNotFoundException) {
-            warning("Empty replay folder. (highlight)Stopping.");
+            warning(fileNotFoundException.getMessage(),"(highlight)Stopping.");
             exception = true;
         } catch (Exception e) {
             error("Couldn't load the replay, maybe it's corrupted or has the wrong permissions. (highlight)Stopping.");
@@ -229,7 +235,7 @@ public class ChunkTrailer extends Module{
         } finally {
             if (!exception) {
                 if (loadMode.get() == LoadMode.Nearest)
-                    currentWaypointIndex = WaypointUtils.getNearestWaypoint(currentFlightData.getWaypoints());
+                    currentWaypointIndex = WaypointUtils.getNearestWaypoint(currentFlightData);
                 else currentWaypointIndex = 0;
                 firstWaypointIndex = currentWaypointIndex;
                 currentWaypoint = currentFlightData.getWaypoints().get(currentWaypointIndex);
@@ -239,18 +245,21 @@ public class ChunkTrailer extends Module{
 
     private void handleFileSave() {
         try {
+            if (currentFlightData.getWaypoints().isEmpty()) {
+                warning("Couldn't save the replay, since there aren't any waypoints. (highlight)Stopping.");
+                exception = true;
+                return;
+            }
             String worldName = Utils.getWorldName().replaceAll("[<>:\"/\\\\|?*]", "_");
             String date = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss"));
             String filename = worldName + "(" + date + ")";
-            currentFlightData.updateMetadata(startTime, date);
-            //if (currentFlightData.getFlightMetadata().mode() == ReplayMode.Generate) currentFlightData.getWaypoints().removeLast();
+            if (currentFlightData.getFlightStats().mode() == ReplayMode.Generate) currentFlightData.getWaypoints().removeLast();
+            currentFlightData.updateStats(startTime, date);
             ReplayFileManager.saveReplay(currentFlightData, filename);
             flightFilename = filename;
-        } catch (IndexOutOfBoundsException e) {
-            if (e.getMessage().contains("Index 0 out of bounds for length 0"))
-                warning("Couldn't save the replay, since there aren't any waypoints. (highlight)Stopping.");
         } catch (Exception e) {
             error("Couldn't save the replay, maybe the directory hasn't got enough permissions. (highlight)Stopping.");
+            exception = true;
         }
     }
 
@@ -267,19 +276,17 @@ public class ChunkTrailer extends Module{
 
     @Override
     public void onDeactivate() {
-        if (exception) return;
-        try {
-            if (replayMode.get() != ReplayMode.Load) handleFileSave();
-            if (flightStats.get()) {
-                if (replayMode.get() != ReplayMode.Load) {
-                    FlightStatsManager.showMetadata(flightFilename, currentFlightData.getFlightMetadata());
-                } else {
-                    FlightStatsManager.showCurrentStats(startTime, firstWaypointIndex, currentWaypointIndex, currentFlightData);
-                }
+        if (Modules.get().isActive(ElytraExtras.class) && autoEnableElytraExtras.get())
+            Modules.get().get(ElytraExtras.class).toggle();
+        if (replayMode.get() != ReplayMode.Load) handleFileSave();
+        if (exception) {exception = false; return;}
+        if (flightStats.get()) {
+            if (replayMode.get() != ReplayMode.Load) {
+                FlightStatsManager.showStats(flightFilename, currentFlightData.getFlightStats());
+            } else {
+                FlightStatsManager.showCurrentStats(startTime, firstWaypointIndex, currentWaypointIndex, currentFlightData);
             }
-            if (Modules.get().isActive(ElytraExtras.class) && autoEnableElytraExtras.get())
-                Modules.get().get(ElytraExtras.class).toggle();
-        } catch (Exception ignored) {}
+        }
     }
 
 
@@ -299,7 +306,7 @@ public class ChunkTrailer extends Module{
     private void onTick(TickEvent.Pre event) {
         if (replayMode.get() == ReplayMode.Save) return;
         Vec3d playerPos = mc.player.getPos();
-        double distanceToWaypoint = (currentFlightData.getFlightMetadata().mode() == ReplayMode.Save) ? currentWaypoint.distanceTo(playerPos) : getHorizontalDistance(currentWaypoint,playerPos);
+        double distanceToWaypoint = (currentFlightData.getFlightStats().mode() == ReplayMode.Save) ? currentWaypoint.distanceTo(playerPos) : getHorizontalDistance(currentWaypoint,playerPos);
         if (distanceToWaypoint < deltaDistance.get()) {
             if (replayMode.get() == ReplayMode.Generate) {
                 if (angleOverlap.get()) currentFlightData.generateWaypoint(searchAngle.get(),originalAngle,minDistance.get(),maxDistance.get());
