@@ -25,25 +25,14 @@ public class WaypointUtils {
         }
     }
 
-    public static int getNearestWaypoint(FlightData flightData) {
-        ArrayList<Vec3d> waypoints = flightData.getWaypoints();
-        if (waypoints.isEmpty() || waypoints.size() == 1) return 0;
-        double minDistance = waypoints.getFirst().distanceTo(mc.player.getPos());
-        int nearestIndex = 0;
-        for (int index = 1; index < waypoints.size(); index++) {
-            double distance = waypoints.get(index).distanceTo(mc.player.getPos());
-            if (distance < minDistance) {
-                minDistance = distance;
-                nearestIndex = index;
-            }
-        }
-        return nearestIndex;
-    }
-
     public static double getHorizontalDistance(Vec3d vec1, Vec3d vec2) {
         double d = vec2.x - vec1.x;
         double f = vec2.z - vec1.z;
         return Math.sqrt(d * d + f * f);
+    }
+
+    public static double getDistance(Vec3d vec1, Vec3d vec2, ReplayMode mode) {
+        return (mode == ReplayMode.Generate) ? getHorizontalDistance(vec1, vec2) : vec1.distanceTo(vec2);
     }
 
     public static double getAbsoluteDistance(int firstWaypointIndex, int currentWaypointIndex, FlightData flightData) {
@@ -51,9 +40,7 @@ public class WaypointUtils {
         if (currentWaypointIndex != flightData.getWaypoints().size()-1) currentWaypointIndex-=1;
         Vec3d firstWaypoint = flightData.getWaypoints().get(firstWaypointIndex);
         Vec3d lastWaypoint = flightData.getWaypoints().get(currentWaypointIndex);
-        return (flightData.getFlightStats().mode() == ReplayMode.Generate) ?
-            getHorizontalDistance(firstWaypoint,lastWaypoint) :
-            firstWaypoint.distanceTo(lastWaypoint);
+        return getDistance(firstWaypoint,lastWaypoint,flightData.getFlightStats().mode());
     }
 
     public static double getCumulativeDistance(int firstWaypointIndex, int currentWaypointIndex, FlightData flightData) {
@@ -61,9 +48,7 @@ public class WaypointUtils {
         ArrayList<Vec3d> waypoints = flightData.getWaypoints();
         double cumulativeDistance = 0;
         for (int i = firstWaypointIndex; i < currentWaypointIndex; i++) {
-            cumulativeDistance += (flightData.getFlightStats().mode() == ReplayMode.Generate) ?
-                getHorizontalDistance(waypoints.get(i),waypoints.get(i+1)) :
-                waypoints.get(i).distanceTo(waypoints.get(i+1));
+            cumulativeDistance += getDistance(waypoints.get(i),waypoints.get(i+1), flightData.getFlightStats().mode());
         }
         return cumulativeDistance;
     }
@@ -72,5 +57,14 @@ public class WaypointUtils {
         return (flightData.getWaypoints().size() > 1)
             ? ((currentWaypointIndex) * 100.0) / (flightData.getWaypoints().size() - 1)
             : 100.0;
+    }
+
+    public static double getYaw(Vec3d pos) {
+        Vec3d playerPos = mc.player.getPos();
+        double dx = pos.getX() - playerPos.getX();
+        double dz = pos.getZ() - playerPos.getZ();
+        double yawRadians = Math.atan2(-dx, dz);
+        double yawDegrees = Math.toDegrees(yawRadians);
+        return (yawDegrees + 360) % 360;
     }
 }

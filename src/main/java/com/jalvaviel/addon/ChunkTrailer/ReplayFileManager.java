@@ -35,6 +35,7 @@ public class ReplayFileManager implements IReplayFileManager {
         .create();
 
     public static void saveReplay(FlightData flightData, String filename) throws Exception {
+        if (flightData.getWaypoints().isEmpty()) throw new IndexOutOfBoundsException("The replay is empty.");
         if (Files.notExists(REPLAYS_PATH)) Files.createDirectory(REPLAYS_PATH);
         String filepath = REPLAYS_PATH + "/" + filename;
         filepath += (filename.contains(".json")) ? "" : ".json";

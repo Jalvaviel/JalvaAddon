@@ -4,20 +4,19 @@ package com.jalvaviel.addon.modules;
 import com.google.gson.JsonSyntaxException;
 import com.jalvaviel.addon.Addon;
 import com.jalvaviel.addon.ChunkTrailer.*;
-import com.jalvaviel.addon.utils.WaypointUtils;
 import meteordevelopment.meteorclient.events.entity.DamageEvent;
 import meteordevelopment.meteorclient.events.game.GameLeftEvent;
 import meteordevelopment.meteorclient.events.meteor.KeyEvent;
 import meteordevelopment.meteorclient.events.meteor.MouseButtonEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
-import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.systems.modules.Modules;
 import meteordevelopment.meteorclient.utils.Utils;
 import meteordevelopment.meteorclient.utils.misc.Keybind;
 import meteordevelopment.meteorclient.utils.misc.input.KeyAction;
+import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
@@ -30,7 +29,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 
 import static com.jalvaviel.addon.utils.WaypointUtils.*;
-import static org.lwjgl.glfw.GLFW.GLFW_KEY_GRAVE_ACCENT;
+import static org.lwjgl.glfw.GLFW.*;
 
 public class ChunkTrailer extends Module{
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -62,7 +61,7 @@ public class ChunkTrailer extends Module{
     private final Setting<String> replay = sgMode.add(new ProvidedStringSetting.Builder()
         .name("replay")
         .description("Select a replay file.")
-        .visible(() -> replayMode.get() == ReplayMode.Load)
+        .visible(() -> replayMode.get() == ReplayMode.Load || replayMode.get() == ReplayMode.Edit)
         .supplier(ReplayFileManager::getReplayFiles)
         .defaultValue(SELECT_REPLAY_STRING)
         .build()
@@ -126,8 +125,26 @@ public class ChunkTrailer extends Module{
     private final Setting<Keybind> saveWaypoint = sgMode.add(new KeybindSetting.Builder()
         .name("save-waypoint-keybind")
         .description("The keybind to save a waypoint.")
-        .defaultValue(Keybind.fromKey(GLFW_KEY_GRAVE_ACCENT))
-        .visible(() -> replayMode.get() == ReplayMode.Save)
+        .defaultValue(Keybind.fromKey(GLFW_KEY_APOSTROPHE))
+        .visible(() -> replayMode.get() == ReplayMode.Save || replayMode.get() == ReplayMode.Edit)
+        .build()
+    );
+
+    private final Setting<Keybind> deleteWaypoint = sgMode.add(new KeybindSetting.Builder()
+        .name("delete-waypoint-keybind")
+        .description("The keybind to delete a waypoint.")
+        .defaultValue(Keybind.fromKey(GLFW_KEY_SEMICOLON))
+        .visible(() -> replayMode.get() == ReplayMode.Save || replayMode.get() == ReplayMode.Edit)
+        .build()
+    );
+
+    private final Setting<Integer> deleteDistance = sgMode.add(new IntSetting.Builder()
+        .name("delete-distance")
+        .description("The maximum distance to delete a waypoint.")
+        .defaultValue(deltaDistance.get())
+        .min(1)
+        .sliderRange(1, 20)
+        .visible(() -> replayMode.get() == ReplayMode.Save || replayMode.get() == ReplayMode.Edit)
         .build()
     );
 
@@ -154,16 +171,30 @@ public class ChunkTrailer extends Module{
 
     private final Setting<Boolean> renderWaypoints = sgRender.add(new BoolSetting.Builder()
         .name("render-waypoints")
-        .description("Renders the waypoints when flying.")
+        .description("Renders the waypoint box when flying.")
+        .defaultValue(true)
+        .build()
+    );
+
+    private final Setting<Boolean> renderBeams = sgRender.add(new BoolSetting.Builder()
+        .name("render-beams")
+        .description("Renders the beams of the waypoints when flying.")
+        .defaultValue(true)
+        .build()
+    );
+
+    private final Setting<Boolean> renderLines = sgRender.add(new BoolSetting.Builder()
+        .name("render-lines")
+        .description("Renders the lines and arrows between waypoints when flying.")
         .defaultValue(true)
         .build()
     );
 
     private final Setting<SettingColor> sideColorBox = sgRender.add(new ColorSetting.Builder()
-        .name("next-side-color")
-        .description("The side color of the next waypoint.")
+        .name("current-side-color")
+        .description("The side color of the current waypoint.")
         .defaultValue(new SettingColor(16,144,106, 100))
-        .visible(renderWaypoints::get)
+        .visible(() -> renderWaypoints.get() || renderBeams.get() || renderLines.get())
         .build()
     );
 
@@ -171,7 +202,15 @@ public class ChunkTrailer extends Module{
         .name("previous-side-color")
         .description("The side color of the previous waypoints.")
         .defaultValue(new SettingColor(144,106,16, 100))
-        .visible(renderWaypoints::get)
+        .visible(() -> renderWaypoints.get() || renderBeams.get() || renderLines.get())
+        .build()
+    );
+
+    private final Setting<SettingColor> nextSideColorBox = sgRender.add(new ColorSetting.Builder()
+        .name("next-side-color")
+        .description("The side color of the next waypoints.")
+        .defaultValue(new SettingColor(106,16,144, 100))
+        .visible(() -> renderWaypoints.get() || renderBeams.get() || renderLines.get())
         .build()
     );
 
@@ -179,7 +218,17 @@ public class ChunkTrailer extends Module{
         .name("occlusion-culling")
         .description("Doesn't render the beams behind blocks.")
         .defaultValue(false)
-        .visible(renderWaypoints::get)
+        .visible(() -> renderWaypoints.get() || renderBeams.get() || renderLines.get())
+        .build()
+    );
+
+    private final Setting<Integer> arrows = sgRender.add(new IntSetting.Builder()
+        .name("arrows")
+        .description("The amount of arrows between waypoints.")
+        .defaultValue(4)
+        .min(0)
+        .sliderRange(0, 20)
+        .visible(renderLines::get)
         .build()
     );
 
@@ -190,9 +239,11 @@ public class ChunkTrailer extends Module{
     private int currentWaypointIndex;
     private int firstWaypointIndex;
     private LocalTime startTime;
-    boolean exception = false;
+    private boolean exception = false;
     public static final String EMPTY_REPLAY_FOLDER_STRING = "No replays found.";
     public static final String SELECT_REPLAY_STRING = "Select a replay.";
+
+    Vec3d[] vectors;
 
     private void instantiateFlightData() {
         startTime = LocalTime.now();
@@ -207,7 +258,7 @@ public class ChunkTrailer extends Module{
             case Save:
                 currentFlightData = new FlightData(FlightStats.genDummyMetadata(ReplayMode.Save), new ArrayList<>());
                 break;
-            case Load:
+            case Load, Edit:
                 handleFileLoad();
                 break;
         }
@@ -217,6 +268,7 @@ public class ChunkTrailer extends Module{
         try {
             exception = false;
             currentFlightData = ReplayFileManager.loadReplay(replay.get(), rewind.get());
+            flightFilename = replay.get();
         } catch (JsonSyntaxException jsonSyntaxException){
             warning("This replay might be using an older format, trying to convert...");
             try {
@@ -227,7 +279,7 @@ public class ChunkTrailer extends Module{
                 exception = true;
             }
         } catch (FileNotFoundException fileNotFoundException) {
-            warning(fileNotFoundException.getMessage(),"(highlight)Stopping.");
+            warning(" Couldn't find the replay file. (highlight)Stopping.");
             exception = true;
         } catch (Exception e) {
             error("Couldn't load the replay, maybe it's corrupted or has the wrong permissions. (highlight)Stopping.");
@@ -235,7 +287,7 @@ public class ChunkTrailer extends Module{
         } finally {
             if (!exception) {
                 if (loadMode.get() == LoadMode.Nearest)
-                    currentWaypointIndex = WaypointUtils.getNearestWaypoint(currentFlightData);
+                    currentWaypointIndex = currentFlightData.getNearestWaypoint();
                 else currentWaypointIndex = 0;
                 firstWaypointIndex = currentWaypointIndex;
                 currentWaypoint = currentFlightData.getWaypoints().get(currentWaypointIndex);
@@ -252,20 +304,19 @@ public class ChunkTrailer extends Module{
             }
             String worldName = Utils.getWorldName().replaceAll("[<>:\"/\\\\|?*]", "_");
             String date = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss"));
-            String filename = worldName + "(" + date + ")";
-            if (currentFlightData.getFlightStats().mode() == ReplayMode.Generate) currentFlightData.getWaypoints().removeLast();
-            currentFlightData.updateStats(startTime, date);
+            String filename = (replayMode.get() == ReplayMode.Edit) ? flightFilename : worldName + "(" + date + ")";
+            if (currentFlightData.getFlightStats().mode() == ReplayMode.Generate && replayMode.get() != ReplayMode.Edit) currentFlightData.getWaypoints().removeLast();
+            if (replayMode.get() != ReplayMode.Edit) currentFlightData.updateStats(startTime, date);
             ReplayFileManager.saveReplay(currentFlightData, filename);
             flightFilename = filename;
         } catch (Exception e) {
-            error("Couldn't save the replay, maybe the directory hasn't got enough permissions. (highlight)Stopping.");
+            error("Couldn't save the replay: " + e.getMessage() + " (highlight)Stopping.");
             exception = true;
         }
     }
 
     @Override
     public void onActivate() {
-        assert mc.player != null;
         instantiateFlightData();
         if (!autoEnableElytraExtras.get()) warning("You don't have ElytraExtras enabled, consider enabling it.");
         if (!Modules.get().isActive(ElytraExtras.class) && autoEnableElytraExtras.get()) {
@@ -289,24 +340,35 @@ public class ChunkTrailer extends Module{
         }
     }
 
+    @EventHandler(priority = EventPriority.HIGH)
+    private void onKey(KeyEvent event) { handleKeyPress(event.key, event.action); }
 
     @EventHandler(priority = EventPriority.HIGH)
-    private void onKey(KeyEvent event) {
-        if (event.action == KeyAction.Release) return;
-        if (event.key == saveWaypoint.get().getValue() && replayMode.get() == ReplayMode.Save) currentFlightData.addWaypoint(mc.player.getPos());
-    }
+    private void onMouseButton(MouseButtonEvent event) { handleKeyPress(event.button, event.action); }
 
-    @EventHandler(priority = EventPriority.HIGH)
-    private void onMouseButton(MouseButtonEvent event) {
-        if (event.action == KeyAction.Release) return;
-        if (event.button == saveWaypoint.get().getValue() && replayMode.get() == ReplayMode.Save) currentFlightData.addWaypoint(mc.player.getPos());
+    private void handleKeyPress(int keybind, KeyAction action) {
+        if (action == KeyAction.Release) return;
+        if (keybind == saveWaypoint.get().getValue()) {
+            if (replayMode.get() == ReplayMode.Save) currentFlightData.addWaypoint(mc.player.getPos());
+            if (replayMode.get() == ReplayMode.Edit) {
+                Vec3d newPos = (currentFlightData.getFlightStats().mode() == ReplayMode.Generate) ?
+                    new Vec3d(mc.player.getX(),NULL_Y_VALUE,mc.player.getZ()) : mc.player.getPos();
+                currentFlightData.addWaypointWithEditMode(newPos);
+            }
+        }
+        if (keybind == deleteWaypoint.get().getValue()) {
+            if (replayMode.get() == ReplayMode.Save || replayMode.get() == ReplayMode.Edit && currentFlightData.getWaypoints().size() > 1) {
+                int getNearestWaypointIndex = currentFlightData.getNearestWaypoint(deleteDistance.get());
+                if (currentFlightData.getWaypoints().size() > 1 && getNearestWaypointIndex != -1) currentFlightData.removeWaypoint(getNearestWaypointIndex);
+            }
+        }
     }
 
     @EventHandler
     private void onTick(TickEvent.Pre event) {
-        if (replayMode.get() == ReplayMode.Save) return;
+        if (replayMode.get() == ReplayMode.Save || replayMode.get() == ReplayMode.Edit) return;
         Vec3d playerPos = mc.player.getPos();
-        double distanceToWaypoint = (currentFlightData.getFlightStats().mode() == ReplayMode.Save) ? currentWaypoint.distanceTo(playerPos) : getHorizontalDistance(currentWaypoint,playerPos);
+        double distanceToWaypoint = getDistance(currentWaypoint,playerPos,currentFlightData.getFlightStats().mode());
         if (distanceToWaypoint < deltaDistance.get()) {
             if (replayMode.get() == ReplayMode.Generate) {
                 if (angleOverlap.get()) currentFlightData.generateWaypoint(searchAngle.get(),originalAngle,minDistance.get(),maxDistance.get());
@@ -324,17 +386,20 @@ public class ChunkTrailer extends Module{
 
     @EventHandler
     private void onRender(Render3DEvent event) {
-        if (renderWaypoints.get()) {
-            if (occlusionCulling.get()) {
-                event.renderer.triangles.depthTest = true;
-                event.renderer.lines.depthTest = true;
-            }
-            for (int waypoint = 0; waypoint < currentFlightData.getWaypoints().size(); waypoint++) {
-                SettingColor color = (waypoint == currentWaypointIndex) ? sideColorBox.get() : prevSideColorBox.get();
-                event.renderer.box(currentFlightData.getWaypoints().get(waypoint).x - 0.25, mc.world.getBottomY(), currentFlightData.getWaypoints().get(waypoint).z - 0.25,
-                    currentFlightData.getWaypoints().get(waypoint).x + 0.25, mc.world.getTopY(), currentFlightData.getWaypoints().get(waypoint).z + 0.25, color, color, ShapeMode.Sides, 0);
-                event.renderer.box(currentFlightData.getWaypoints().get(waypoint).x - deltaDistance.get(), currentFlightData.getWaypoints().get(waypoint).y - deltaDistance.get(), currentFlightData.getWaypoints().get(waypoint).z - deltaDistance.get(),
-                    currentFlightData.getWaypoints().get(waypoint).x + deltaDistance.get(), currentFlightData.getWaypoints().get(waypoint).y + deltaDistance.get(), currentFlightData.getWaypoints().get(waypoint).z + deltaDistance.get(), color, color, ShapeMode.Sides, 0);
+        if (occlusionCulling.get()) {
+            event.renderer.triangles.depthTest = true;
+            event.renderer.lines.depthTest = true;
+        }
+        for (int waypoint = 0; waypoint < currentFlightData.getWaypoints().size(); waypoint++) {
+            Color color = (waypoint == currentWaypointIndex) ? sideColorBox.get() :
+                (waypoint < currentWaypointIndex) ? prevSideColorBox.get() : nextSideColorBox.get();
+            if (renderBeams.get()) WaypointRenderer.renderBeam(event.renderer, currentFlightData.getWaypoints().get(waypoint), color);
+            if (renderWaypoints.get()) WaypointRenderer.renderWaypoint(event.renderer, currentFlightData.getWaypoints().get(waypoint), color);
+            if (renderLines.get() && waypoint > 0) {
+                Vec3d first = currentFlightData.getWaypoints().get(waypoint);
+                Vec3d second = currentFlightData.getWaypoints().get(waypoint-1);
+                WaypointRenderer.renderLine(event.renderer, first, second, color);
+                WaypointRenderer.renderArrows(event.renderer, first, second, arrows.get(), color);
             }
         }
     }
