@@ -305,7 +305,10 @@ public class ChunkTrailer extends Module{
             String worldName = Utils.getWorldName().replaceAll("[<>:\"/\\\\|?*]", "_");
             String date = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss"));
             String filename = (replayMode.get() == ReplayMode.Edit) ? flightFilename : worldName + "(" + date + ")";
-            if (currentFlightData.getFlightStats().mode() == ReplayMode.Generate && replayMode.get() != ReplayMode.Edit) currentFlightData.getWaypoints().removeLast();
+            if (currentFlightData.getFlightStats().mode() == ReplayMode.Generate && replayMode.get() != ReplayMode.Edit) {
+                currentFlightData.getWaypoints().removeLast();
+                currentFlightData.addWaypoint(new Vec3d(mc.player.getPos().x, NULL_Y_VALUE, mc.player.getPos().z));
+            }
             if (replayMode.get() != ReplayMode.Edit) currentFlightData.updateStats(startTime, date);
             ReplayFileManager.saveReplay(currentFlightData, filename);
             flightFilename = filename;

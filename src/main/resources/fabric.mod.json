@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "jalva-addon",
-  "version": "0.7.1+mc1.21.1",
+  "version": "0.8+mc1.21.1",
   "name": "JalvaAddon",
   "description": "Random modules made by Jalvaviel.",
   "authors": [

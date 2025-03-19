@@ -4,6 +4,7 @@ import com.jalvaviel.addon.Addon;
 import meteordevelopment.meteorclient.events.entity.player.PlaceBlockEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
+import meteordevelopment.meteorclient.gui.screens.ModulesScreen;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
@@ -15,6 +16,7 @@ import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.meteorclient.utils.world.BlockUtils;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.block.Block;
+import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.item.Items;
 import net.minecraft.util.math.BlockPos;
 
@@ -47,7 +49,7 @@ public class BlockReplacer extends Module {
 
     @EventHandler
     private void onTick(TickEvent.Pre event) {
-        if (currentBlock == null || currentBlockPos == null || mc.world == null) return;
+        if (currentBlock == null || currentBlockPos == null || mc.world == null || mc.currentScreen instanceof ModulesScreen) return;
         if (delay.get() == 0) return;
         counter++;
         if (counter <= delay.get()) return;

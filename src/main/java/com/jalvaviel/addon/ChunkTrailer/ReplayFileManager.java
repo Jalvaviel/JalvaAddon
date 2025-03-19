@@ -26,6 +26,7 @@ import static com.jalvaviel.addon.Addon.LOG;
 import static com.jalvaviel.addon.modules.ChunkTrailer.EMPTY_REPLAY_FOLDER_STRING;
 import static com.jalvaviel.addon.modules.ChunkTrailer.SELECT_REPLAY_STRING;
 import static com.jalvaviel.addon.utils.WaypointUtils.NULL_Y_VALUE;
+import static meteordevelopment.meteorclient.utils.player.ChatUtils.info;
 
 public class ReplayFileManager implements IReplayFileManager {
     private static final Path REPLAYS_PATH = FabricLoader.getInstance().getGameDir().resolve("meteor-client/trail-replays");
@@ -59,8 +60,7 @@ public class ReplayFileManager implements IReplayFileManager {
 
     public static FlightData convertOldReplay(String filename) throws Exception {
         FileReader reader = new FileReader(REPLAYS_PATH.resolve(filename).toFile());
-        Gson gson = new Gson();
-        Vec3d[] waypointArray = gson.fromJson(reader, Vec3d[].class);
+        Vec3d[] waypointArray = GSON.fromJson(reader, Vec3d[].class);
         ArrayList<Vec3d> waypoints = Arrays.stream(waypointArray).collect(Collectors.toCollection(ArrayList::new));
         ReplayMode replayMode = (waypoints.getFirst().getY() == NULL_Y_VALUE) ? ReplayMode.Generate : ReplayMode.Save;
         FlightData flightData = new FlightData(FlightStats.genDummyMetadata(replayMode), waypoints);

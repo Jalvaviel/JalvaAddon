@@ -1,4 +1,6 @@
 package com.jalvaviel.addon;
+import com.jalvaviel.addon.AntiKick.AntiKickData.PacketDataSetting;
+import com.jalvaviel.addon.AntiKick.AntiKickData.PacketDataSettingScreen;
 import com.jalvaviel.addon.BiomeESP.BiomeData.BiomeDataSetting;
 import com.jalvaviel.addon.BiomeESP.BiomeData.BiomeDataSettingScreen;
 import com.jalvaviel.addon.BiomeESP.BiomeList.BiomeListSetting;
@@ -40,6 +42,13 @@ public class Addon extends MeteorAddon {
             reset.action = setting::reset;
         });
 
+        SettingsWidgetFactory.registerCustomFactory(PacketDataSetting.class, (theme) -> (table, setting) -> {
+            WButton button = table.add(theme.button(GuiRenderer.EDIT)).expandCellX().widget();
+            button.action = () -> mc.setScreen(new PacketDataSettingScreen(theme, (PacketDataSetting<?>) setting));
+            WButton reset = table.add(theme.button(GuiRenderer.RESET)).widget();
+            reset.action = setting::reset;
+        });
+
 
         // Modules
         Modules.get().add(new MapBoundaries());
@@ -49,6 +58,7 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new BiomeColorChanger());
         Modules.get().add(new ChunkTrailer());
         Modules.get().add(new BlockReplacer());
+        Modules.get().add(new AntiKick());
         //Modules.get().add(new SpawnerFarm());
 
         // Commands
