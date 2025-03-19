@@ -2,9 +2,9 @@
 
 This is an addon for Meteor Client in Minecraft.
 
-## Release 0.7 of JalvaAddon
+## Release 0.8 of JalvaAddon
 
-### Biome Color Changer (WIP):
+### Biome Color Changer:
 - Lets you change the water color, sky color, foliage color and grass color of the biomes in-game.
 - Has a default color config and a biome specific color config.
 
@@ -14,11 +14,16 @@ This is an addon for Meteor Client in Minecraft.
 - The **Generate** mode lets you change the angle of deviation from the player's camera and distance to generate random checkpoints in the overworld.
 - The **Save** mode lets you place custom checkpoints with a hotkey and is nether compatible.
 - The **Load** mode lets you replay a file from the nearest checkpoint to the player, and also on reverse mode among other settings.
+- The **Edit** mode lets you review the checkpoints in a replay file and add or remove them.
 
 ### Elytra Utils
 - Auxiliary module for Chunk Trailer, but can also be used as a standalone one.
 - Has some ElytraFly utils such as elytra recast, automatic use of rockets, elytra replace, etc.
-- Also includes a speedometer.
+
+### Anti Kick
+- Lets you select C2S Packets to be skipped when they reach a certain threshold. Useful to avoid kicks from Paper servers.
+- Has a default limit and timer for each type of packet that you can modify.
+- Reference for default implementation: `https://docs.papermc.io/paper/1.19/reference/global-configuration#packet-limiter`.
 
 ### Map Boundaries
 - Highlights the map region boundaries in-game. Useful for making map art machines/plots.
