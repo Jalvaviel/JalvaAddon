@@ -12,13 +12,15 @@ import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
 import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.item.ElytraItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.MathHelper;
 import meteordevelopment.meteorclient.systems.config.Config;
+
+import static meteordevelopment.meteorclient.MeteorClient.mc;
+import static net.fabricmc.loader.impl.util.log.Log.log;
 
 public class ElytraExtras extends Module {
     public SettingGroup sgMisc = settings.getDefaultGroup();
@@ -97,30 +99,19 @@ public class ElytraExtras extends Module {
 
     public final Setting<Integer> fireworkDelay = sgMisc.add(new IntSetting.Builder()
         .name("firework-delay")
-        .description("The delay before using another firework.")
+        .description("The delay before using another firework in ticks.")
         .defaultValue(10)
         .sliderRange(0,100)
         .visible(doUseFireworks::get)
         .build()
     );
 
-    /* DEPRECATED, Meteor has a built in speedometer.
-    public final Setting<Boolean> speedometer = sgRender.add(new BoolSetting.Builder()
-        .name("speedometer")
-        .description("Displays a speedometer.")
+    public final Setting<Boolean> antiAfk = sgMisc.add(new BoolSetting.Builder()
+        .name("anti-afk")
+        .description("Swings the hand to prevent getting kicked out.")
         .defaultValue(true)
         .build()
     );
-     */
-
-    /*
-    public final Setting<SettingColor> speedColor = sgRender.add(new ColorSetting.Builder()
-        .name("Speed Color")
-        .description("Color for the speedometer.")
-        .defaultValue(Color.WHITE)
-        .build()
-    );
-     */
 
     private void replaceElytra() {
         if (doReplaceElytra.get()) {
@@ -139,7 +130,7 @@ public class ElytraExtras extends Module {
             if (recastCheck() && !mc.player.isOnGround()) {
                 elytraCounter++;
                 if (elytraCounter >= recastDelay.get()) {
-                    mc.player.startFallFlying();
+                    //mc.player.startFallFlying();
                     mc.player.networkHandler.sendPacket(new ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.START_FALL_FLYING));
                     elytraCounter = 0;
                 }
@@ -156,9 +147,9 @@ public class ElytraExtras extends Module {
 
     private void useFireworks() {
         if (doUseFireworks.get()) {
-            fireworkCounter++;
+            if (currentPlayerSpeed <= fireworkMinSpeed.get()) fireworkCounter++;
             FindItemResult fireworks = InvUtils.find(Items.FIREWORK_ROCKET);
-            if (fireworks.found() && fireworkCounter >= fireworkDelay.get() && currentPlayerSpeed <= fireworkMinSpeed.get() && !recastCheck()) {
+            if (fireworks.found() && fireworkCounter >= fireworkDelay.get() && recastCheck()) {
                 InvUtils.move().from(fireworks.slot()).toHotbar(replenishSlot.get()-1);
                 InvUtils.swap(replenishSlot.get()-1, true);
                 mc.player.swingHand(Hand.MAIN_HAND);
@@ -168,10 +159,15 @@ public class ElytraExtras extends Module {
             }
         }
     }
+
+    private void antiAfk() {
+        if (antiAfk.get() && mc.player.getAbilities().flying && mc.player.age % 120 == 0) {
+            mc.player.swingHand(mc.player.getActiveHand());
+        }
+    }
+
     @EventHandler
     private void onTick(TickEvent.Pre event){
-        if (!this.isActive()) return;
-        assert mc.player != null;
         double dx = mc.player.getX() - mc.player.prevX;
         double dy = mc.player.getY() - mc.player.prevY;
         double dz = mc.player.getZ() - mc.player.prevZ;
@@ -180,25 +176,12 @@ public class ElytraExtras extends Module {
         recast();
         fixYaw();
         useFireworks();
+        antiAfk();
     }
 
     private boolean recastCheck() {
         ItemStack itemStack = mc.player.getEquippedStack(EquipmentSlot.CHEST);
-        return (!mc.player.isFallFlying() && !mc.player.hasVehicle() && !mc.player.isClimbing() && itemStack.isOf(Items.ELYTRA) && ElytraItem.isUsable(itemStack));
-    }
-
-    CustomTextRenderer speedRenderer = new CustomTextRenderer(Config.get().font.get());
-
-    @EventHandler
-    private void onRender2D(Render2DEvent event) {
-        /* DEPRECATED, Meteor has a built in speedometer.
-        if (speedometer.get() && this.isActive()) {
-            String speed = String.format("Speed: %.3f b/s",currentPlayerSpeed);
-            double dx =  (mc.getWindow().getFramebufferWidth()-speedRenderer.getWidth(speed))/2;
-            double paddingDy = mc.player.getArmor() > 0 ? 66.0f : 55.0f;
-            double dy = mc.getWindow().getFramebufferHeight()-(paddingDy*mc.getWindow().getScaleFactor());
-            speedRenderer.render(speed, dx, dy, speedColor.get(), false);
-        }
-         */
+        //info(String.valueOf(mc.player.getAbilities()));
+        return (!mc.player.getAbilities().flying && mc.player.getY() - mc.player.prevY < 0 && !mc.player.isSwimming() && !mc.player.hasVehicle() && !mc.player.isClimbing() && itemStack.isOf(Items.ELYTRA) && !itemStack.willBreakNextUse());
     }
 }

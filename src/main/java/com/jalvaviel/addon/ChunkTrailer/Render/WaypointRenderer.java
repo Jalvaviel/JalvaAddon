@@ -1,4 +1,4 @@
-package com.jalvaviel.addon.ChunkTrailer;
+package com.jalvaviel.addon.ChunkTrailer.Render;
 
 import meteordevelopment.meteorclient.renderer.Renderer3D;
 import meteordevelopment.meteorclient.renderer.ShapeMode;
@@ -7,6 +7,7 @@ import meteordevelopment.meteorclient.systems.modules.movement.elytrafly.ElytraF
 import meteordevelopment.meteorclient.systems.modules.movement.elytrafly.ElytraFly;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.Heightmap;
 
 import static com.jalvaviel.addon.utils.WaypointUtils.NULL_Y_VALUE;
 import static meteordevelopment.meteorclient.MeteorClient.mc;
@@ -47,17 +48,18 @@ public class WaypointRenderer {
     }
 
     public static void renderBeam(Renderer3D renderer, Vec3d waypoint, Color color) {
-        final double beamSize = 0.25;
-        renderer.box(waypoint.x - beamSize, mc.world.getBottomY(), waypoint.z - beamSize,
-            waypoint.x + beamSize, mc.world.getTopY()*2, waypoint.z + beamSize, color, color,
+        final double BEAM_SIZE = 0.25;
+        final int MAX_HEIGHT = 320*2;
+        renderer.box(waypoint.x - BEAM_SIZE, mc.world.getBottomY(), waypoint.z - BEAM_SIZE,
+            waypoint.x + BEAM_SIZE, MAX_HEIGHT, waypoint.z + BEAM_SIZE, color, color,
             ShapeMode.Sides, 0);
     }
 
     public static void renderWaypoint(Renderer3D renderer, Vec3d waypoint, Color color) {
-        final double waypointSize = 1;
+        final double WAYPOINT_SIZE = 1;
         if (waypoint.y == NULL_Y_VALUE) waypoint = new Vec3d(waypoint.x,lineHeightRender,waypoint.z);
-        renderer.box(waypoint.x - waypointSize, waypoint.y - waypointSize, waypoint.z - waypointSize,
-            waypoint.x + waypointSize, waypoint.y + waypointSize, waypoint.z + waypointSize, color, color, ShapeMode.Sides, 0);
+        renderer.box(waypoint.x - WAYPOINT_SIZE, waypoint.y - WAYPOINT_SIZE, waypoint.z - WAYPOINT_SIZE,
+            waypoint.x + WAYPOINT_SIZE, waypoint.y + WAYPOINT_SIZE, waypoint.z + WAYPOINT_SIZE, color, color, ShapeMode.Sides, 0);
     }
 
     public static void renderLine(Renderer3D renderer, Vec3d first, Vec3d second, Color color) {

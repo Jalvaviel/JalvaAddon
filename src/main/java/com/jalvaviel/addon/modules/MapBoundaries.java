@@ -11,6 +11,7 @@ import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
+import net.minecraft.world.Heightmap;
 
 public class MapBoundaries extends Module {
     private final SettingGroup sgGeneral = settings.getDefaultGroup();
@@ -45,11 +46,12 @@ public class MapBoundaries extends Module {
         int posZ1 = (int) (Math.round(mc.player.getZ() / 128) * 128 - 64);
         int posX2 = posX1 + 128;
         int posZ2 = posZ1 + 128;
-        int bottomY = mc.world.getBottomY();
-        int topY = mc.world.getTopY();
+        final int BOTTOM_Y = mc.world.getBottomY();
+        final int TOP_Y = 320;
+
         event.renderer.triangles.depthTest = occlusion.get();
         event.renderer.lines.depthTest = occlusion.get();
-        event.renderer.box(posX1+ 0.0075,bottomY,posZ1 + 0.0075,posX2 - 0.0075,topY,posZ2 - 0.0075,color2,color1,ShapeMode.Both,6);
+        event.renderer.box(posX1+ 0.0075,BOTTOM_Y,posZ1 + 0.0075,posX2 - 0.0075,TOP_Y,posZ2 - 0.0075,color2,color1,ShapeMode.Both,6);
         // Z fighting sucks ass.
     }
 }

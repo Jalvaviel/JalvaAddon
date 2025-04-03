@@ -1,5 +1,6 @@
-package com.jalvaviel.addon.ChunkTrailer;
+package com.jalvaviel.addon.ChunkTrailer.FlightData;
 
+import com.jalvaviel.addon.ChunkTrailer.FlightStats.FlightStats;
 import net.minecraft.util.math.Vec3d;
 
 import java.time.LocalTime;
@@ -14,4 +15,6 @@ public interface IFlightData {
     FlightStats getFlightStats();
     void setFlightStats(FlightStats flightStats);
     void updateStats(LocalTime startTime, String date);
+    int getNearestWaypointIndex();
+    Vec3d getNearestWaypoint();
 }

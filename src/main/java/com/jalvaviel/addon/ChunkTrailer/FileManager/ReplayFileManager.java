@@ -1,10 +1,12 @@
-package com.jalvaviel.addon.ChunkTrailer;
+package com.jalvaviel.addon.ChunkTrailer.FileManager;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import com.jalvaviel.addon.modules.ChunkTrailer;
+import com.jalvaviel.addon.ChunkTrailer.Enums.ReplayMode;
+import com.jalvaviel.addon.ChunkTrailer.FlightData.FlightData;
 
+import com.jalvaviel.addon.ChunkTrailer.FlightStats.FlightStats;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.util.math.Vec3d;
 
@@ -26,7 +28,6 @@ import static com.jalvaviel.addon.Addon.LOG;
 import static com.jalvaviel.addon.modules.ChunkTrailer.EMPTY_REPLAY_FOLDER_STRING;
 import static com.jalvaviel.addon.modules.ChunkTrailer.SELECT_REPLAY_STRING;
 import static com.jalvaviel.addon.utils.WaypointUtils.NULL_Y_VALUE;
-import static meteordevelopment.meteorclient.utils.player.ChatUtils.info;
 
 public class ReplayFileManager implements IReplayFileManager {
     private static final Path REPLAYS_PATH = FabricLoader.getInstance().getGameDir().resolve("meteor-client/trail-replays");

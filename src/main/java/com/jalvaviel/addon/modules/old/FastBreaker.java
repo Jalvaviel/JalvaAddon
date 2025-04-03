@@ -83,7 +83,7 @@ public class FastBreaker extends Module {
     private void onStartBreakingBlock(StartBreakingBlockEvent event) {
         assert mc.player != null;
         assert mc.world != null;
-        enchantment = mc.player.getWorld().getRegistryManager().get(RegistryKeys.ENCHANTMENT).getEntry(Enchantments.EFFICIENCY).get();
+        enchantment = mc.player.getWorld().getRegistryManager().getOptionalEntry(Enchantments.EFFICIENCY).get();
         HitResult hitResult = lookingAt();
         if (hitResult == null) return;
         BlockPos targetPos = lookingAt().getBlockPos();

@@ -1,4 +1,4 @@
-package com.jalvaviel.addon.ChunkTrailer;
+package com.jalvaviel.addon.ChunkTrailer.FileManager;
 
 
 import com.google.gson.*;

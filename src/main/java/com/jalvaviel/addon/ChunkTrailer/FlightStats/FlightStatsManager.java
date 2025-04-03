@@ -1,4 +1,6 @@
-package com.jalvaviel.addon.ChunkTrailer;
+package com.jalvaviel.addon.ChunkTrailer.FlightStats;
+
+import com.jalvaviel.addon.ChunkTrailer.FlightData.FlightData;
 
 import java.time.Duration;
 import java.time.LocalTime;

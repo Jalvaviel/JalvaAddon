@@ -1,4 +1,6 @@
-package com.jalvaviel.addon.ChunkTrailer;
+package com.jalvaviel.addon.ChunkTrailer.FileManager;
+
+import com.jalvaviel.addon.ChunkTrailer.FlightData.FlightData;
 
 public interface IReplayFileManager {
     static void saveReplay(FlightData flightData, String filename) throws Exception {}

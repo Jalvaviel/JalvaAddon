@@ -17,7 +17,7 @@ import static meteordevelopment.meteorclient.MeteorClient.mc;
 @Mixin(ClientWorld.class)
 public class SkyColorMixin {
     @Inject(method = "getSkyColor", at = @At("HEAD"), cancellable = true)
-    private void onGetSkyColor(Vec3d cameraPos, float tickDelta, CallbackInfoReturnable<Vec3d> info) {
+    private void onGetSkyColor(Vec3d cameraPos, float tickDelta, CallbackInfoReturnable<Integer> info) {
         BiomeColorChanger biomeColorChanger = Modules.get().get(BiomeColorChanger.class);
         if (biomeColorChanger.isActive()) {
             assert mc.world != null;
@@ -25,7 +25,7 @@ public class SkyColorMixin {
             try {
                 RegistryEntry<Biome> currentBiome = mc.world.getBiome(mc.player.getBlockPos());
                 if (biomeColorChanger.biomes.get().contains(currentBiome.getKey().get())) {
-                    info.setReturnValue(biomeColorChanger.biomeConfigs.get().get(currentBiome.getKey().get()).skyColor.getVec3d());
+                    info.setReturnValue(biomeColorChanger.biomeConfigs.get().get(currentBiome.getKey().get()).skyColor.getPacked());
                 }
             } catch (Exception ignored) {}
         }

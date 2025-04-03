@@ -10,7 +10,6 @@ import meteordevelopment.meteorclient.utils.player.InvUtils;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
 import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.item.ElytraItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket;
@@ -270,7 +269,6 @@ public class ElytraBoostPlus extends Module {
             if (recastCheck() && !mc.player.isOnGround()) {
                 elytraCounter++;
                 if (elytraCounter >= recastDelay.get()) {
-                    mc.player.startFallFlying();
                     mc.player.networkHandler.sendPacket(new ClientCommandC2SPacket(mc.player, ClientCommandC2SPacket.Mode.START_FALL_FLYING));
                     elytraCounter = 0;
                 }
@@ -317,7 +315,7 @@ public class ElytraBoostPlus extends Module {
     private boolean recastCheck() {
         assert mc.player != null;
         ItemStack itemStack = mc.player.getEquippedStack(EquipmentSlot.CHEST);
-        return (!mc.player.isFallFlying() && !mc.player.hasVehicle() && !mc.player.isClimbing() && itemStack.isOf(Items.ELYTRA) && ElytraItem.isUsable(itemStack));
+        return (!mc.player.getAbilities().flying && !mc.player.hasVehicle() && !mc.player.isClimbing() && itemStack.isOf(Items.ELYTRA) && itemStack.willBreakNextUse());
     }
 
 
@@ -330,7 +328,7 @@ public class ElytraBoostPlus extends Module {
 
     private void doBoost(PlayerMoveEvent e) {
         assert mc.player != null;
-        if (mc.player.getInventory().getStack(38).getItem() != Items.ELYTRA || !mc.player.isFallFlying() || mc.player.isTouchingWater() || mc.player.isInLava() || !mc.player.isFallFlying())
+        if (mc.player.getInventory().getStack(38).getItem() != Items.ELYTRA || !mc.player.getAbilities().flying || mc.player.isTouchingWater() || mc.player.isInLava() || !mc.player.getAbilities().flying)
             return;
 
         if (cruiseControl.get()) {

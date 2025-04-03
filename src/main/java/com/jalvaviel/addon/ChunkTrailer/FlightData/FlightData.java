@@ -1,5 +1,6 @@
-package com.jalvaviel.addon.ChunkTrailer;
+package com.jalvaviel.addon.ChunkTrailer.FlightData;
 
+import com.jalvaviel.addon.ChunkTrailer.FlightStats.FlightStats;
 import net.minecraft.util.math.Vec3d;
 
 import java.time.Duration;
@@ -9,13 +10,13 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.concurrent.ThreadLocalRandom;
 
-import static com.jalvaviel.addon.ChunkTrailer.FlightStats.REPLAY_VERSION;
+import static com.jalvaviel.addon.ChunkTrailer.FlightStats.FlightStats.REPLAY_VERSION;
 import static com.jalvaviel.addon.utils.WaypointUtils.*;
 import static java.lang.Math.cos;
 import static java.lang.Math.sin;
 import static meteordevelopment.meteorclient.MeteorClient.mc;
 
-public class FlightData implements IFlightData{
+public class FlightData implements IFlightData {
     private FlightStats flightStats;
     private ArrayList<Vec3d> waypoints;
 
@@ -24,7 +25,7 @@ public class FlightData implements IFlightData{
         this.waypoints = waypoints;
     }
 
-    public int getNearestWaypoint(int maxDistance) {
+    public int getNearestWaypointIndex(int maxDistance) {
         if (waypoints.isEmpty() || waypoints.size() == 1) return 0;
         double minDistance = getDistance(waypoints.getFirst(),mc.player.getPos(),getFlightStats().mode());
         int nearestIndex = 0;
@@ -38,9 +39,11 @@ public class FlightData implements IFlightData{
         return (getDistance(waypoints.get(nearestIndex),mc.player.getPos(), getFlightStats().mode()) < maxDistance) ? nearestIndex : -1;
     }
 
-    public int getNearestWaypoint() {
-        return getNearestWaypoint(Integer.MAX_VALUE);
+    public int getNearestWaypointIndex() {
+        return getNearestWaypointIndex(Integer.MAX_VALUE);
     }
+
+    public Vec3d getNearestWaypoint() {return waypoints.get(getNearestWaypointIndex()); }
 
     public ArrayList<Vec3d> getWaypoints() {
         return waypoints;
@@ -51,7 +54,7 @@ public class FlightData implements IFlightData{
     public void addWaypoint(Vec3d waypoint, int position) { waypoints.add(position,waypoint); }
 
     public void addWaypointWithEditMode(Vec3d waypoint) {
-        int nearestIndex = getNearestWaypoint();
+        int nearestIndex = getNearestWaypointIndex();
         Vec3d A = waypoints.get(nearestIndex);
         Vec3d B = nearestIndex > 0 ? waypoints.get(nearestIndex - 1) : null;
         Vec3d C = nearestIndex < waypoints.size() - 1 ? waypoints.get(nearestIndex + 1) : null;

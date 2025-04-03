@@ -3,11 +3,18 @@ package com.jalvaviel.addon.modules;
 
 import com.google.gson.JsonSyntaxException;
 import com.jalvaviel.addon.Addon;
-import com.jalvaviel.addon.ChunkTrailer.*;
-import meteordevelopment.meteorclient.events.entity.DamageEvent;
+import com.jalvaviel.addon.ChunkTrailer.Enums.GenerateMode;
+import com.jalvaviel.addon.ChunkTrailer.Enums.LoadMode;
+import com.jalvaviel.addon.ChunkTrailer.Enums.ReplayMode;
+import com.jalvaviel.addon.ChunkTrailer.FileManager.ReplayFileManager;
+import com.jalvaviel.addon.ChunkTrailer.FlightData.FlightData;
+import com.jalvaviel.addon.ChunkTrailer.FlightStats.FlightStats;
+import com.jalvaviel.addon.ChunkTrailer.FlightStats.FlightStatsManager;
+import com.jalvaviel.addon.ChunkTrailer.Render.WaypointRenderer;
 import meteordevelopment.meteorclient.events.game.GameLeftEvent;
 import meteordevelopment.meteorclient.events.meteor.KeyEvent;
 import meteordevelopment.meteorclient.events.meteor.MouseButtonEvent;
+import meteordevelopment.meteorclient.events.packets.PacketEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
 import meteordevelopment.meteorclient.settings.*;
@@ -20,7 +27,10 @@ import meteordevelopment.meteorclient.utils.render.color.Color;
 import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
 import meteordevelopment.orbit.EventPriority;
+import net.minecraft.network.packet.s2c.play.DeathMessageS2CPacket;
+import net.minecraft.network.packet.s2c.play.HealthUpdateS2CPacket;
 import net.minecraft.util.math.Vec3d;
+import org.joml.Vector3d;
 
 import java.io.FileNotFoundException;
 import java.time.LocalDateTime;
@@ -83,6 +93,14 @@ public class ChunkTrailer extends Module{
         .build()
     );
 
+    private final Setting<GenerateMode> generateMode = sgMode.add(new EnumSetting.Builder<GenerateMode>()
+        .name("generate-mode")
+        .description("The mode of trail generation.")
+        .defaultValue(GenerateMode.Trail)
+        .visible(() -> replayMode.get() == ReplayMode.Generate)
+        .build()
+    );
+
     private final Setting<Integer> searchAngle = sgMode.add(new IntSetting.Builder()
         .name("search-angle")
         .description("The angle deviation from the player's current yaw.")
@@ -90,7 +108,7 @@ public class ChunkTrailer extends Module{
         .sliderRange(0,180)
         .max(180)
         .min(0)
-        .visible(() -> replayMode.get() == ReplayMode.Generate)
+        .visible(() -> replayMode.get() == ReplayMode.Generate && generateMode.get() == GenerateMode.Trail)
         .build()
     );
 
@@ -100,7 +118,7 @@ public class ChunkTrailer extends Module{
         .defaultValue(500)
         .sliderRange(10, 10000)
         .min(10)
-        .visible(() -> replayMode.get() == ReplayMode.Generate)
+        .visible(() -> replayMode.get() == ReplayMode.Generate && generateMode.get() == GenerateMode.Trail)
         .build()
     );
 
@@ -110,7 +128,7 @@ public class ChunkTrailer extends Module{
         .defaultValue(500)
         .min(10)
         .sliderRange(10, 10000)
-        .visible(() -> replayMode.get() == ReplayMode.Generate)
+        .visible(() -> replayMode.get() == ReplayMode.Generate && generateMode.get() == GenerateMode.Trail)
         .build()
     );
 
@@ -118,7 +136,45 @@ public class ChunkTrailer extends Module{
         .name("angle-overlap")
         .description("Generates the new facing angles from the original angle instead of the last one.")
         .defaultValue(true)
-        .visible(() -> replayMode.get() == ReplayMode.Generate)
+        .visible(() -> replayMode.get() == ReplayMode.Generate && generateMode.get() == GenerateMode.Trail)
+        .build()
+    );
+
+    private final Setting<Integer> chunkDistance = sgMode.add(new IntSetting.Builder()
+        .name("chunk-distance")
+        .description("The distance between trail lines in chunks.")
+        .defaultValue(24)
+        .min(2)
+        .max(60)
+        .sliderRange(2, 60)
+        .visible(() -> replayMode.get() == ReplayMode.Generate && generateMode.get() == GenerateMode.Spiral)
+        .build()
+    );
+
+    private final Setting<Boolean> centerOnPlayer = sgMode.add(new BoolSetting.Builder()
+        .name("center-on-player")
+        .description("Centers the spiral on the player's chunk.")
+        .defaultValue(true)
+        .visible(() -> replayMode.get() == ReplayMode.Generate && generateMode.get() == GenerateMode.Spiral)
+        .build()
+    );
+
+    private final Setting<Vector3d> spiralCenterPos = sgMode.add(new Vector3dSetting.Builder()
+        .name("spiral-center")
+        .description("Center block of the spiral.")
+        .defaultValue(new Vector3d(0,0,0))
+        .visible(() -> replayMode.get() == ReplayMode.Generate && generateMode.get() == GenerateMode.Spiral && !centerOnPlayer.get())
+        .noSlider()
+        .build()
+    );
+
+    private final Setting<Integer> spiralWaypointQuantity = sgMode.add(new IntSetting.Builder()
+        .name("waypoint-quantity")
+        .description("The amount of waypoints to be pre-generated by the spiral algorithm.")
+        .defaultValue(100)
+        .min(1)
+        .sliderRange(1, 400)
+        .visible(() -> replayMode.get() == ReplayMode.Generate && generateMode.get() == GenerateMode.Spiral)
         .build()
     );
 
@@ -237,23 +293,18 @@ public class ChunkTrailer extends Module{
     private float originalAngle;
     private Vec3d currentWaypoint;
     private int currentWaypointIndex;
+    private Vec3d centerSpiralBlock;
     private int firstWaypointIndex;
     private LocalTime startTime;
     private boolean exception = false;
     public static final String EMPTY_REPLAY_FOLDER_STRING = "No replays found.";
     public static final String SELECT_REPLAY_STRING = "Select a replay.";
 
-    Vec3d[] vectors;
-
     private void instantiateFlightData() {
         startTime = LocalTime.now();
         switch (replayMode.get()) {
             case ReplayMode.Generate:
-                originalAngle = mc.player.getYaw();
-                currentFlightData = new FlightData(FlightStats.genDummyMetadata(ReplayMode.Generate), new ArrayList<>());
-                currentFlightData.addWaypoint(new Vec3d(mc.player.getX(), NULL_Y_VALUE, mc.player.getZ())); //generateWaypoint(searchAngle.get(),originalAngle,1,1);
-                currentWaypointIndex = 0;
-                currentWaypoint = currentFlightData.getWaypoints().get(currentWaypointIndex);
+                handleGeneration();
                 break;
             case Save:
                 currentFlightData = new FlightData(FlightStats.genDummyMetadata(ReplayMode.Save), new ArrayList<>());
@@ -262,6 +313,19 @@ public class ChunkTrailer extends Module{
                 handleFileLoad();
                 break;
         }
+    }
+
+    private void handleGeneration() {
+        originalAngle = mc.player.getYaw();
+        currentFlightData = new FlightData(FlightStats.genDummyMetadata(ReplayMode.Generate), new ArrayList<>());
+        if (generateMode.get() == GenerateMode.Spiral) {
+            centerSpiralBlock = (centerOnPlayer.get()) ? getFromChunkPos(mc.player.getChunkPos()) : getFromVector3d(spiralCenterPos.get());
+            generateSpiralBundle(currentFlightData, chunkDistance.get(), centerSpiralBlock, spiralWaypointQuantity.get());
+        } else {
+            currentFlightData.addWaypoint(new Vec3d(mc.player.getX(), NULL_Y_VALUE, mc.player.getZ()));
+        }
+        currentWaypointIndex = 0;
+        currentWaypoint = currentFlightData.getWaypoints().get(currentWaypointIndex);
     }
 
     private void handleFileLoad() {
@@ -287,7 +351,7 @@ public class ChunkTrailer extends Module{
         } finally {
             if (!exception) {
                 if (loadMode.get() == LoadMode.Nearest)
-                    currentWaypointIndex = currentFlightData.getNearestWaypoint();
+                    currentWaypointIndex = currentFlightData.getNearestWaypointIndex();
                 else currentWaypointIndex = 0;
                 firstWaypointIndex = currentWaypointIndex;
                 currentWaypoint = currentFlightData.getWaypoints().get(currentWaypointIndex);
@@ -361,7 +425,7 @@ public class ChunkTrailer extends Module{
         }
         if (keybind == deleteWaypoint.get().getValue()) {
             if (replayMode.get() == ReplayMode.Save || replayMode.get() == ReplayMode.Edit && currentFlightData.getWaypoints().size() > 1) {
-                int getNearestWaypointIndex = currentFlightData.getNearestWaypoint(deleteDistance.get());
+                int getNearestWaypointIndex = currentFlightData.getNearestWaypointIndex(deleteDistance.get());
                 if (currentFlightData.getWaypoints().size() > 1 && getNearestWaypointIndex != -1) currentFlightData.removeWaypoint(getNearestWaypointIndex);
             }
         }
@@ -374,8 +438,10 @@ public class ChunkTrailer extends Module{
         double distanceToWaypoint = getDistance(currentWaypoint,playerPos,currentFlightData.getFlightStats().mode());
         if (distanceToWaypoint < deltaDistance.get()) {
             if (replayMode.get() == ReplayMode.Generate) {
-                if (angleOverlap.get()) currentFlightData.generateWaypoint(searchAngle.get(),originalAngle,minDistance.get(),maxDistance.get());
-                else currentFlightData.generateWaypoint(searchAngle.get(),mc.player.getYaw(),minDistance.get(),maxDistance.get());
+                if (generateMode.get() == GenerateMode.Trail) {
+                    if (angleOverlap.get()) currentFlightData.generateWaypoint(searchAngle.get(),originalAngle,minDistance.get(),maxDistance.get());
+                    else currentFlightData.generateWaypoint(searchAngle.get(),mc.player.getYaw(),minDistance.get(),maxDistance.get());
+                }
             }
             if (replayMode.get() == ReplayMode.Load && currentWaypointIndex+1 >= currentFlightData.getWaypoints().size()) { // currentFlightData.getFlightMetadata().totalWaypoints() Failsafe in case the file's totalWaypoints is not the same as the real amount.
                 toggle();
@@ -416,9 +482,14 @@ public class ChunkTrailer extends Module{
     }
 
     @EventHandler
-    private void onDamage(DamageEvent event) {
-        if (this.disableOnDamage.get()) {
+    private void onPacketRecieve(PacketEvent.Receive event) {
+        if (this.disableOnDamage.get() && event.packet instanceof HealthUpdateS2CPacket packet) {
+            if (this.mc.player.getHealth() - packet.getHealth() > 0.0F) this.toggle();
+            info("Disabling...");
+        }
+        if (this.disableOnDamage.get() && event.packet instanceof DeathMessageS2CPacket packet) {
             this.toggle();
+            info("Disabling...");
         }
     }
 }
