@@ -59,6 +59,7 @@ public class Addon extends MeteorAddon {
         Modules.get().add(new ChunkTrailer());
         Modules.get().add(new BlockReplacer());
         Modules.get().add(new AntiKick());
+        Modules.get().add(new ItemESP());
         //Modules.get().add(new SpawnerFarm());
 
         // Commands
