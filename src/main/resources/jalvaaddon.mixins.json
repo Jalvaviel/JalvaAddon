@@ -6,7 +6,10 @@
     "FoliageColorMixin",
     "GrassColorMixin",
     "SkyColorMixin",
-    "WaterColorMixin"
+    "WaterColorMixin",
+    "BlockESPMixin",
+    "ESPBlockRenderMixin",
+    "NukerMixin"
   ],
   "injectors": {
     "defaultRequire": 1

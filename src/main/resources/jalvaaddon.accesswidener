@@ -1,4 +1,3 @@
 accessWidener v2 named
 
 accessible method net/minecraft/world/biome/source/BiomeSource getCodec ()Lcom/mojang/serialization/MapCodec;
-accessible method meteordevelopment/meteorclient/systems/modules/render/ESP checkCorner (DDDLorg/joml/Vector3d;Lorg/joml/Vector3d;)Z
