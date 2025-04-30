@@ -3,6 +3,7 @@ package com.jalvaviel.addon.modules;
 import com.jalvaviel.addon.Addon;
 import com.jalvaviel.addon.BlockReplacer.ReplaceMode;
 import com.jalvaviel.addon.ChunkTrailer.Enums.ReplayMode;
+import meteordevelopment.meteorclient.events.entity.player.BreakBlockEvent;
 import meteordevelopment.meteorclient.events.entity.player.PlaceBlockEvent;
 import meteordevelopment.meteorclient.events.render.Render3DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
@@ -75,7 +76,6 @@ public class BlockReplacer extends Module {
     }
 
  */
-
     @EventHandler
     private void onPostTick(TickEvent.Post event) {
         if (mc.currentScreen instanceof ModulesScreen) return;
@@ -92,28 +92,6 @@ public class BlockReplacer extends Module {
                     BlockUtils.place(currentBlockPos, blockItem, true, 0, true);
                 }
             }
-            case NukerReplace -> {
-                if (!replacePositions.isEmpty()) {
-                    BlockPos replacePos = replacePositions.getFirst();
-                    FindItemResult blockItem = InvUtils.find(blockToReplace.get().asItem());
-                    if (!blockItem.found() || !PlayerUtils.isWithinReach(replacePos)) return;
-                    if (nuker.isActive()) Modules.get().get(Nuker.class).toggle();
-                    //if (!blockItem.isOffhand()) InvUtils.move().from(blockItem.slot()).toOffhand();
-                    if (BlockUtils.place(replacePos, blockItem, true, 0, true) && !nuker.isActive()) {
-                        replacePositions.removeFirst();
-                        if(replacePositions.isEmpty()) nuker.toggle();
-                    }
-
-                }
-                /*
-                if (nuker.isActive()) Modules.get().get(Nuker.class).toggle();
-                if (currentBlockPos == null || mc.world == null) return;
-                if (!mc.world.getBlockState(currentBlockPos).isReplaceable()) return;
-                FindItemResult blockItem = InvUtils.find(blockToReplace.get().asItem());
-                if (!blockItem.found() || !PlayerUtils.isWithinReach(currentBlockPos)) return;
-                if (BlockUtils.place(currentBlockPos, blockItem, true, 0, true) && !nuker.isActive()) nuker.toggle();
-                 */
-            }
         }
         counter = 0;
     }
@@ -125,4 +103,31 @@ public class BlockReplacer extends Module {
         counter = 0;
         replacePositions.clear();
     }
+
+    @EventHandler
+    private void onBreakBlock(BreakBlockEvent event) {
+    
+    }
 }
+
+                /*
+                if (!replacePositions.isEmpty()) {
+                    BlockPos replacePos = replacePositions.getFirst();
+                    FindItemResult blockItem = InvUtils.find(blockToReplace.get().asItem());
+                    if (!blockItem.found() || !PlayerUtils.isWithinReach(replacePos)) return;
+                    if (nuker.isActive()) Modules.get().get(Nuker.class).toggle();
+                    //if (!blockItem.isOffhand()) InvUtils.move().from(blockItem.slot()).toOffhand();
+                    if (BlockUtils.place(replacePos, blockItem, true, 0, true) && !nuker.isActive()) {
+                        replacePositions.removeFirst();
+                        if(replacePositions.isEmpty()) nuker.toggle();
+                    }
+
+                 */
+                /*
+                if (nuker.isActive()) Modules.get().get(Nuker.class).toggle();
+                if (currentBlockPos == null || mc.world == null) return;
+                if (!mc.world.getBlockState(currentBlockPos).isReplaceable()) return;
+                FindItemResult blockItem = InvUtils.find(blockToReplace.get().asItem());
+                if (!blockItem.found() || !PlayerUtils.isWithinReach(currentBlockPos)) return;
+                if (BlockUtils.place(currentBlockPos, blockItem, true, 0, true) && !nuker.isActive()) nuker.toggle();
+                 */

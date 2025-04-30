@@ -60,6 +60,7 @@ public class NukerMixin {
             .build());
     }
 
+    /*
     @Inject(method = "lambda$onTickPre$9(DDDDLnet/minecraft/util/math/Box;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/BlockState;)V", at =
     @At(value = "INVOKE", target = "Ljava/util/List;add(Ljava/lang/Object;)Z"), cancellable = true)
     private void onBreakBlockUnderground(double pX, double pY, double pZ, double rangeSq, Box box, BlockPos blockPos, BlockState blockState, CallbackInfo ci) {
@@ -73,5 +74,7 @@ public class NukerMixin {
         BlockReplacer blockReplacer = Modules.get().get(BlockReplacer.class);
         if (blockReplacer.isActive() && blockReplacer.replaceMode.get() == ReplaceMode.NukerReplace) blockReplacer.replacePositions.addAll(blocks);//blockReplacer.replacePositions.add(blockPos);
     }
+
+     */
 }
 
