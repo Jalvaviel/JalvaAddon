@@ -2,8 +2,11 @@ package com.jalvaviel.addon.utils;
 
 import meteordevelopment.meteorclient.utils.render.NametagUtils;
 import meteordevelopment.meteorclient.utils.render.color.Color;
+import net.minecraft.client.texture.NativeImage;
 import net.minecraft.item.ItemStack;
 import org.joml.Vector3d;
+
+import java.awt.image.BufferedImage;
 
 public class ColorUtils {
     public static Color getInterpolatedColor(Color startColor, Color endColor, ItemStack itemStack) {
@@ -62,5 +65,15 @@ public class ColorUtils {
 
             return false;
         }
+    }
+
+    public static NativeImage bufferedToNative(BufferedImage canvas) {
+        NativeImage tex = new NativeImage(canvas.getWidth(), canvas.getHeight(), true);
+        for (int x = 0; x < canvas.getWidth(); x++) {
+            for (int y = 0; y < canvas.getHeight(); y++) {
+                tex.setColorArgb(x, y, canvas.getRGB(x, y));
+            }
+        }
+        return tex;
     }
 }

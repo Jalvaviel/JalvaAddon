@@ -3,23 +3,33 @@ package com.jalvaviel.addon.modules;
 import com.jalvaviel.addon.Addon;
 import meteordevelopment.meteorclient.events.render.Render2DEvent;
 import meteordevelopment.meteorclient.events.world.TickEvent;
-import meteordevelopment.meteorclient.renderer.text.CustomTextRenderer;
 import meteordevelopment.meteorclient.settings.*;
 import meteordevelopment.meteorclient.systems.modules.Module;
 import meteordevelopment.meteorclient.utils.player.FindItemResult;
 import meteordevelopment.meteorclient.utils.player.InvUtils;
-import meteordevelopment.meteorclient.utils.render.color.Color;
-import meteordevelopment.meteorclient.utils.render.color.SettingColor;
 import meteordevelopment.orbit.EventHandler;
+import net.minecraft.client.render.RenderLayer;
+import net.minecraft.client.render.RenderLayers;
+import net.minecraft.client.render.model.SpriteAtlasManager;
+import net.minecraft.client.resource.metadata.AnimationFrameResourceMetadata;
+import net.minecraft.client.resource.metadata.AnimationResourceMetadata;
+import net.minecraft.client.texture.*;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.network.packet.c2s.play.ClientCommandC2SPacket;
+import net.minecraft.resource.Resource;
+import net.minecraft.resource.metadata.ResourceMetadata;
 import net.minecraft.util.Hand;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
-import meteordevelopment.meteorclient.systems.config.Config;
 
-import static meteordevelopment.meteorclient.MeteorClient.mc;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import static meteordevelopment.meteorclient.MeteorClient.*;
 import static net.fabricmc.loader.impl.util.log.Log.log;
 
 public class ElytraExtras extends Module {
@@ -113,6 +123,13 @@ public class ElytraExtras extends Module {
         .build()
     );
 
+    public final Setting<Boolean> superSecretSetting = sgMisc.add(new BoolSetting.Builder()
+        .name("super-secret-setting")
+        .description("test")
+        .defaultValue(false)
+        .build()
+    );
+
     private void replaceElytra() {
         if (doReplaceElytra.get()) {
             ItemStack chestStack = mc.player.getInventory().getArmorStack(2);
@@ -183,5 +200,37 @@ public class ElytraExtras extends Module {
         ItemStack itemStack = mc.player.getEquippedStack(EquipmentSlot.CHEST);
         //info(String.valueOf(mc.player.getAbilities()));
         return (!mc.player.getAbilities().flying && mc.player.getY() - mc.player.prevY < 0 && !mc.player.isSwimming() && !mc.player.hasVehicle() && !mc.player.isClimbing() && itemStack.isOf(Items.ELYTRA) && !itemStack.willBreakNextUse());
+    }
+
+    Identifier texture;
+    Identifier sprite;
+    SpriteContents spriteContents;
+    @EventHandler
+    private void onRender2D(Render2DEvent event) {
+        if (superSecretSetting.get()) {
+            int frameOffset = (int) (event.tickDelta * 10);
+            event.drawContext.drawTexture(RenderLayer::getGuiTextured, texture, 256, 256 * 10, 0, 256 * frameOffset, 0, 0, 256, 256);
+        }
+    }
+
+    private void initSuperSecretSetting() throws IOException {
+        texture = Identifier.of("jalvaaddon","textures/super_secret_setting.png");
+        sprite = Identifier.of("jalvaaddon","super_secret_contents");
+        Resource resource = mc.getResourceManager().getResource(texture).get();
+        NativeImage nativeImage = NativeImage.read(resource.getInputStream());
+        List<AnimationFrameResourceMetadata> frames = new ArrayList<>();
+        spriteContents = new SpriteContents(texture
+            , new SpriteDimensions(256,256), nativeImage
+            , new ResourceMetadata.Builder().add(AnimationResourceMetadata.SERIALIZER,
+                new AnimationResourceMetadata(Optional.of(frames), Optional.of(256), Optional.of(256),1,false)).build());
+    }
+
+    @Override
+    public void onActivate() {
+        if (superSecretSetting.get()) {
+            try {
+                initSuperSecretSetting();
+            } catch (IOException ignored) {}
+        }
     }
 }

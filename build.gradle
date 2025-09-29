@@ -13,6 +13,7 @@ base {
 }
 
 repositories {
+    mavenCentral()
     maven {
         name = "Meteor Dev Releases"
         url = "https://maven.meteordev.org/releases"
@@ -31,6 +32,13 @@ dependencies {
 
     // Meteor
     modImplementation "meteordevelopment:meteor-client:${project.meteor_version}"
+
+    // ImageIO
+    implementation "com.twelvemonkeys.imageio:imageio-core:3.12.0"
+    implementation "com.twelvemonkeys.imageio:imageio-jpeg:3.12.0"
+    implementation "com.twelvemonkeys.imageio:imageio-webp:3.12.0"
+    implementation "com.twelvemonkeys.imageio:imageio-tiff:3.12.0"
+    //implementation "org.sejda.imageio:webp-imageio:0.1.6"
 }
 
 tasks {

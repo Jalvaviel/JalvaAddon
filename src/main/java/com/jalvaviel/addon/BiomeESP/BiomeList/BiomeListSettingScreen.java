@@ -17,7 +17,6 @@ public class BiomeListSettingScreen extends DynamicRegistryListSettingScreen<Bio
         super(theme, "Select Biomes", setting, setting.get(), RegistryKeys.BIOME);
     }
 
-
     @Override
     protected WWidget getValueWidget(RegistryKey<Biome> value) {
         return theme.label(getValueName(value));
